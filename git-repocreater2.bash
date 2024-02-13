@@ -506,27 +506,40 @@ fi
 
 #
 ## Creating a description for your repository
-while [[ -z "$confirm_edited_description" || "$confirm_edited_description" != "true" ]]; do
-  if [[ "$git_repo_created" == "true" || "$git_repo_exists" == "true" ]]; then
-    current_description="$(gh repo view "$git_username/$repo_name" --json "description" | awk -F '"' '{print $4}')"
+while [[ -z "$confirm_edited_description" ||\
+         "$confirm_edited_description" != "true" ]]
+do
+  if [[ "$git_repo_created" == "true" ||\
+        "$git_repo_exists" == "true" ]]
+  then
+    current_description="$(gh repo view "$git_username/$repo_name" --json "description" |\
+                         awk -F '"' '{print $4}')"
     printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
-    if [[ -z "$current_description" ]]; then
+    if [[ -z "$current_description" ]]
+    then
       current_description="No description, website, or topics provided."
     fi
-    read -r -e -i "$current_description" edited_description
-    if (( ${#edited_description} >= 0 && ${#edited_description} <= 350 )); then
+    read -r -e -i "$current_description" "edited_description"
+    if (( "${#edited_description}" >= "0" && "${#edited_description}" <= "350" ))
+    then
       printf "Description saved.\n"
       printf "Description: \"$edited_description\"\n"
-      while true; do
+      while true
+      do
         printf "Is this correct? Yes/No: "
-        read -r confirm_edited_description
-        confirm_edited_description="$(printf "%s" "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
-        if [[ "$confirm_edited_description" == "yes" || "$confirm_edited_description" == "y" ]]; then
+        read -r "confirm_edited_description"
+        confirm_edited_description="$(printf "%s" "$confirm_edited_description" |\
+                                    tr '[:upper:]' '[:lower:]')"
+        if [[ "$confirm_edited_description" == "yes" ||\
+              "$confirm_edited_description" == "y" ]]
+        then
           confirm_edited_description="true"
           break 2
-        elif [[ "$confirm_edited_description" == "no" || "$confirm_edited_description" == "n" ]]; then
+        elif [[ "$confirm_edited_description" == "no" ||\
+                "$confirm_edited_description" == "n" ]]
+        then
           confirm_edited_description="false"
-          break
+          break 1
         fi
         printf "Invalid input. Please enter Yes/No.\n"
       done
