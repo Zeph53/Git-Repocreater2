@@ -274,7 +274,7 @@ do
     do
       printf "Enter the letter for the license template you want to use: "
       read -r "selected_letter"
-      selected_letter=$(echo "$selected_letter" | tr '[:lower:]' '[:upper:]')
+      selected_letter=$(printf "$selected_letter" | tr '[:lower:]' '[:upper:]')
       if [[ "$selected_letter" =~ ^[A-M]$ ]]
       then
         selected_license_file="$(printf "%s" "$license_names" | grep "\[$selected_letter\]")"
@@ -283,7 +283,7 @@ do
         do
           printf "Is this correct? Yes/No: "
           read -r "confirm_selected_license"
-          confirm_selected_license="$(echo "$confirm_selected_license" | tr '[:upper:]' '[:lower:]')"
+          confirm_selected_license="$(printf "$confirm_selected_license" | tr '[:upper:]' '[:lower:]')"
           if [[ "$confirm_selected_license" == yes ||\
                 "$confirm_selected_license" == y ]]
           then
@@ -325,7 +325,7 @@ if [[ -n "$license_file_url" ||\
       "$select_new_license_confirmed" == "true" ]]
 then
   license_name="$(printf "%s" "$license_names" | grep -oP "$selected_letter\]\K[^)]+")"
-  license_file_name="$(echo "$license_name" | awk -F '(' '{print $1}' | awk '{$1=$1};1').txt"
+  license_file_name="$(printf "$license_name" | awk -F '(' '{print $1}' | awk '{$1=$1};1').txt"
   license_file_path="$HOME/.github/LICENSES/${license_file_name}"
   if [[ -f "$license_file_path" ]]
   then
@@ -363,7 +363,7 @@ while [[ "$lic_file_exists_repo" == "true" && "$license_file_differs" == "true" 
 do
   printf "Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
   read -r "confirm_copy_license"
-  confirm_copy_license="$(echo "$confirm_copy_license" | tr '[:upper:]' '[:lower:]')"
+  confirm_copy_license="$(printf "$confirm_copy_license" | tr '[:upper:]' '[:lower:]')"
   if [[ "$confirm_copy_license" == yes ||\
         "$confirm_copy_license" == y ]]
   then
@@ -403,7 +403,7 @@ while [[ "$lic_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
   read -r "confirm_edit_license"
-  confirm_edit_license="$(echo "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
+  confirm_edit_license="$(printf "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
   if [[ "$confirm_edit_license" == yes ||\
    "$confirm_edit_license" == y ]]
   then
@@ -525,7 +525,7 @@ then
     fi
     read -r -e -i "$current_description" "edited_description"
     if (( ${#edited_description} >= 0 &&\
-      ${#edited_description} <= 350 ))
+          ${#edited_description} <= 350 ))
     then
       printf "Description saved.\n"
       description_saved="true"
@@ -537,11 +537,46 @@ then
     fi    
   done
 fi
+# Confirm correct description
 if [[ "$description_saved" == "true" ]]
 then
   printf "Description: \"$edited_description\"\n"
+  while true
+  do
+    printf "Is this correct? Yes/No: "
+    read -r "confirm_edited_description"
+      confirm_edited_description="$(printf "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$confirm_edited_description" == yes ||\
+          "$confirm_edited_description" == y ]]
+    then
+      confirm_edited_description=true
+      break 1
+    elif [[ "$confirm_edited_description" == no ||\
+            "$confirm_edited_description" == n ]]
+    then
+      confirm_edited_description=false
+      break 1
+  done
 fi
 
+# If license file exists, ask user if they want to edit it before continuing 
+while [[ "$lic_file_exists_repo" == "true" ]]
+do
+  printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
+  read -r "confirm_edit_license"
+  confirm_edit_license="$(printf "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$confirm_edit_license" == yes ||\
+   "$confirm_edit_license" == y ]]
+  then
+    edit_license_confirmed=true
+    break 1
+  elif [[ "$confirm_edit_license" == no ||\
+   "$confirm_edit_license" == n ]]
+  then
+    edit_license_confirmed=false
+    break 1
+  fi
+done
 
 
 
