@@ -474,6 +474,8 @@ fi
 # Check to see if repository exists already on GitHub
 if [[ "$repo_git_commited_all" == "true" ]]
 then
+  git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
+  git_repo_url="https://github.com/$git_username/$repo_name"
   if gh repo view "$git_username/$repo_name" --json name &> /dev/null
   then
     printf "Repository already exists at: \"$git_repo_url\"\n"
@@ -507,8 +509,6 @@ fi
 if [[ "$git_repo_created" == "true" ||\
       "$git_repo_exists" == "true" ]]
 then
-  git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
-  git_repo_url="https://github.com/$git_username/$repo_name"
   current_description="$(gh repo view "$git_username/$repo_name" --json "description" |\
     awk -F '"' '{print $4}')"
   printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
