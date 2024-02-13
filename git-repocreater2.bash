@@ -549,16 +549,16 @@ do
       printf "Is this correct? Yes/No: "
       read -r "confirm_edited_description"
       confirm_edited_description="$(printf "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
-      if [[ "$confirm_edited_description" == yes ||\
-            "$confirm_edited_description" == y ]]
+      if [[ "$confirm_edited_description" == "yes" ||\
+            "$confirm_edited_description" == "y" ]]
       then
-        confirm_edited_description=true
+        confirm_edited_description="true"
         break 1
-      elif [[ "$confirm_edited_description" == no ||\
-              "$confirm_edited_description" == n ]]
+      elif [[ "$confirm_edited_description" == "no" ||\
+              "$confirm_edited_description" == "n" ]]
       then
-        confirm_edited_description=false
-        continue
+        confirm_edited_description="false"
+        break 1
       fi
     done
   fi
