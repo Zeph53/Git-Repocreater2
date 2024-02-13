@@ -474,9 +474,12 @@ then
   fi
 fi
 # Create a remote repository
-if [[ "$repo_git_commited_all" == true && "$git_repo_exists" == false ]]; then
+if [[ "$repo_git_commited_all" == true &&\
+      "$git_repo_exists" == false ]]
+then
   printf "Attempting to create a new repository on GitHub.\n"
-  if gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public; then
+  if gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public
+  then
     printf "GitHub repository successfully created at: \"$git_repo_url\"\n"
     git_repo_created=true
   else
@@ -486,21 +489,21 @@ fi
 
 
 # Forcefully push all local files to remote repository
-if [[ "$git_repo_created" == true || "$git_repo_exists" == true ]]; then
+if [[ "$git_repo_created" == true ||\
+      "$git_repo_exists" == true ]]
+then
   printf "Pushing changes to GitHub...\n"
   git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
   git_repo_pushed=true
 fi
 
 # Check if the content was indeed pushed to GitHub
-if [[ "$git_repo_pushed" == true ]]; then
+if [[ "$git_repo_pushed" == true ]]
+then
   printf "Checking if the content was pushed to GitHub...\n"
-  
-  # Get the commit hash after the push
   latest_commit=$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)
-  
-  # Check if there was a new commit
-  if [[ "$previous_commit" != "$latest_commit" ]]; then
+  if [[ "$previous_commit" != "$latest_commit" ]]
+  then
     printf "Content \"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
   else
     printf "No new commits detected. Content \"$filename\" may not have been pushed successfully.\n"
