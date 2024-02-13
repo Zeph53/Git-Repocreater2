@@ -173,7 +173,7 @@ fi
 filename="$(basename "$1")"
 if [[ -e "$HOME/.github/$repo_name.git/$filename" ]]
 then
-  printf "\"$filename\" already exists in \"$HOME/.github/$repo_name.git/$filename\".\n"
+  printf "\"$filename\" already exists in \"$repo_name.git/$filename\".\n"
   filename_exists=true
 else
   printf "\"$filename\" does not exists in \"$HOME/.github/$repo_name.git/$filename\".\n"
@@ -194,7 +194,7 @@ if [[ "$repo_dir_exists" == true ||\
 then
   while [[ -z "$content_copied_to_repo" ]]
   do
-    printf "Copying \"$filename\" into \"$HOME/.github/$repo_name.git\".\n"
+    printf "Copying \"$filename\" into \"$HOME/.github/$repo_name.git/$filename\".\n"
     if cp --force --recursive "$1" "$HOME/.github/$repo_name.git"
     then
       printf "File or directory successfully copied into repository.\n"
@@ -483,6 +483,9 @@ if [[ "$repo_git_commited_all" == true && "$git_repo_exists" == false ]]; then
     printf "GitHub repository creation failed at: \"$git_repo_url\"\n"
   fi
 fi
+
+
+
 # Forcefully push all local files to remote repository
 if [[ "$git_repo_created" == true || "$git_repo_exists" == true ]]; then
   # Store the filename for checking
@@ -499,11 +502,6 @@ if [[ "$git_repo_pushed" == true ]]; then
   
   # Get the commit hash before the push
   previous_commit=$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)
-  
-  # Push changes to GitHub
-  printf "Pushing changes to GitHub...\n"
-  git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
-  git_repo_pushed=true
   
   # Get the latest commit hash after the push
   latest_commit=$(git ls-remote "$git_repo_url" HEAD | awk '{print $1}')
