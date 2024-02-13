@@ -521,8 +521,19 @@ while [[ -z "$confirm_edited_description" || "$confirm_edited_description" != "t
       printf "Is this correct? Yes/No: "
       read -r confirm_edited_description
       confirm_edited_description="$(printf "%s" "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
-    else
-      printf "Description exceeds the 350 character limit.\n"
+      if [[ "$confirm_edit_license" == yes ||\
+            "$confirm_edit_license" == y ]]
+      then
+        edit_license_confirmed=true
+        break 1
+      elif [[ "$confirm_edit_license" == no ||\
+              "$confirm_edit_license" == n ]]
+      then
+        edit_license_confirmed=false
+        break 1
+      else
+        printf "Description exceeds the 350 character limit.\n"
+      fi
     fi
   fi
 done
