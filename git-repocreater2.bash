@@ -162,11 +162,30 @@ fi
 # Check for existing repo with same name
 if ! [[ -d $HOME/.github/$repo_name.git ]]
 then
-  printf "Local repository does not exist at \"$HOME/.github/$repo_name.git\". Creating it.\n"
+  printf "Local repository does not exist at: \"$HOME/.github/$repo_name.git\". Creating it.\n"
   # Create a repo directory and copy contents of the argument to it
   mkdir -p $HOME/.github/$repo_name.git
-  printf "Copying contents of $1 into \"$HOME/.github/$repo_name.git\" \n"
-  cp --force --recursive $1 $HOME/.github/$repo_name.git
+  repo_dir_exists=true
+else
+  printf "Repository directory exists at: \"$HOME/.github/$repo_name.git\".\n"
+  repo_dir_exists=true
+fi
+# Forcefully copy file into repository, overwriting previous file
+if [[ "$repo_dir_exists" == true ]]
+then
+  filename="$(basename "$1")"
+  while [[ -z "$content_copied_to_repo" ]]
+  do
+    printf "Copying contents of $filename into \"$HOME/.github/$repo_name.git\" \n"
+    if cp --force --recursive "$1" "$HOME/.github/$repo_name.git"
+    then
+      printf "File or directory successfully copied into repository.\n"
+      content_copied_to_repo=true
+      break 1
+    else
+      printf "File or directory failed to copy into repository\n"
+    fi
+  done
 fi
 #
 ## Choosing a license template, editing it, or making your own.
@@ -436,12 +455,9 @@ then
   fi
 fi
 # Create a remote repository
-if [[ "$repo_git_commited_all" == true &&\
- "$git_repo_exists" == false ]]
-then
+if [[ "$repo_git_commited_all" == true && "$git_repo_exists" == false ]]; then
   printf "Attempting to create a new repository on GitHub.\n"
-  if gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public
-  then
+  if gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public; then
     printf "GitHub repository successfully created at: \"$git_repo_url\"\n"
     git_repo_created=true
   else
@@ -449,19 +465,35 @@ then
   fi
 fi
 # Forcefully push all local files to remote repository
-if [[ "$git_repo_created" == true ||\
- "$git_repo_exists" == true ]]
-then
+if [[ "$git_repo_created" == true || "$git_repo_exists" == true ]]; then
+  # Store the filename for checking
+  
+  # Push changes to GitHub
+  printf "Pushing changes to GitHub...\n"
   git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
   git_repo_pushed=true
 fi
-# Notify the user if the content was indeed pushed
-if [[ "$git_repo_pushed" == true ]]
-then
-  printf "Content in staging successfully pushed to GitHub at: \"$git_repo_url\"\n"
+
+# Check if the content was indeed pushed to GitHub
+if [[ "$git_repo_pushed" == true ]]; then
+  printf "Checking if the content was pushed to GitHub...\n"
+  
+  # Get the commit hash before the push
+  previous_commit=$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)
+  
+  # Push changes to GitHub
+  printf "Pushing changes to GitHub...\n"
+  git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
+  git_repo_pushed=true
+  
+  # Get the latest commit hash after the push
+  latest_commit=$(git ls-remote "$git_repo_url" HEAD | awk '{print $1}')
+  
+  # Check if there was a new commit
+  if [[ "$previous_commit" != "$latest_commit" ]]; then
+    printf "Content \"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
+  else
+    printf "No new commits detected. Content \"$filename\" may not have been pushed successfully.\n"
+  fi
 fi
-
-
-
-
 
