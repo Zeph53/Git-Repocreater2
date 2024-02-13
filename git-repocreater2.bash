@@ -540,6 +540,7 @@ done
 
 
 
+
 # Forcefully push all local files to remote repository
 if [[ "$git_repo_created" == "true" ||\
       "$git_repo_exists" == "true" &&\
