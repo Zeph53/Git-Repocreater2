@@ -558,7 +558,7 @@ if [[ "$edited_description_differs" == "true" ]]
 then
     while [[ -z "$description_uploaded" ]]
     do
-      if gh repo edit "$git_username/$repo_name" --description "$edited_description"
+      if gh repo edit "$git_username/$repo_name" --description "$edited_description" &> /dev/null
       then
         printf "Description successfully edited.\n"
         description_uploaded=true
