@@ -517,27 +517,24 @@ while [[ -z "$confirm_edited_description" || "$confirm_edited_description" != "t
     if (( ${#edited_description} >= 0 && ${#edited_description} <= 350 )); then
       printf "Description saved.\n"
       printf "Description: \"$edited_description\"\n"
-      printf "Is this correct? Yes/No: "
-      read -r confirm_edited_description
-      confirm_edited_description="$(printf "%s" "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
-      if [[ "$confirm_edited_description" == "yes" || "$confirm_edited_description" == "y" ]]; then
-        confirm_edited_description="true"
-        break 1
-      elif [[ "$confirm_edited_description" == "no" || "$confirm_edited_description" == "n" ]]; then
-        confirm_edited_description="false"
-      else
+      while true; do
+        printf "Is this correct? Yes/No: "
+        read -r confirm_edited_description
+        confirm_edited_description="$(printf "%s" "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
+        if [[ "$confirm_edited_description" == "yes" || "$confirm_edited_description" == "y" ]]; then
+          confirm_edited_description="true"
+          break 2
+        elif [[ "$confirm_edited_description" == "no" || "$confirm_edited_description" == "n" ]]; then
+          confirm_edited_description="false"
+          break
+        fi
         printf "Invalid input. Please enter Yes/No.\n"
-      fi
+      done
     else
       printf "Description exceeds the 350 character limit.\n"
     fi
   fi
 done
-
-if [[ "$confirm_edited_description" == "true" ]]
-then
-  printf "asjdhasdhasdusahd\n"
-fi
 
 
 
