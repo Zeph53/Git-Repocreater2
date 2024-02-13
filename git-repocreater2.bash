@@ -544,7 +544,7 @@ do
   if [[ "$description_saved" == "true" ]]
   then
     printf "Description: \"$edited_description\"\n"
-    while true
+    while [[ -z "$confirm_edited_description" ]]
     do
       printf "Is this correct? Yes/No: "
       read -r "confirm_edited_description"
