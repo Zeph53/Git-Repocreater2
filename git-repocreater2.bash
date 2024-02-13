@@ -485,12 +485,8 @@ if [[ "$repo_git_commited_all" == true && "$git_repo_exists" == false ]]; then
 fi
 
 
-
 # Forcefully push all local files to remote repository
 if [[ "$git_repo_created" == true || "$git_repo_exists" == true ]]; then
-  # Store the filename for checking
-  
-  # Push changes to GitHub
   printf "Pushing changes to GitHub...\n"
   git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
   git_repo_pushed=true
@@ -500,11 +496,8 @@ fi
 if [[ "$git_repo_pushed" == true ]]; then
   printf "Checking if the content was pushed to GitHub...\n"
   
-  # Get the commit hash before the push
-  previous_commit=$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)
-  
-  # Get the latest commit hash after the push
-  latest_commit=$(git ls-remote "$git_repo_url" HEAD | awk '{print $1}')
+  # Get the commit hash after the push
+  latest_commit=$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)
   
   # Check if there was a new commit
   if [[ "$previous_commit" != "$latest_commit" ]]; then
@@ -513,4 +506,5 @@ if [[ "$git_repo_pushed" == true ]]; then
     printf "No new commits detected. Content \"$filename\" may not have been pushed successfully.\n"
   fi
 fi
+
 
