@@ -517,7 +517,7 @@ then
   do
     if [[ -z "$current_description" ]]
     then
-      $current_description="$(printf "No description, website, or topics provided. ")"
+      current_description="$(printf "No description, website, or topics provided. ")"
     fi
     if [[ "$description_exceeds_limit" == "true" ]]
     then
