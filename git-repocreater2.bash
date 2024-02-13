@@ -506,78 +506,64 @@ fi
 
 #
 ## Creating a description for your repository
-if [[ "$git_repo_created" == "true" ||\
-      "$git_repo_exists" == "true" ]]
-then
-  current_description="$(gh repo view "$git_username/$repo_name" --json "description" |\
-    awk -F '"' '{print $4}')"
-  while [[ -z "$description_exceeds_limit" ||\
-           "$description_exceeds_limit" == "true" ]]
-  do
-    printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
-    if [[ -z "$current_description" ]]
-    then
-      current_description="$(printf "No description, website, or topics provided. ")"
-    fi
-    if [[ "$description_exceeds_limit" == "true" ]]
-    then
-      current_description="$edited_description"
-    fi
-    read -r -e -i "$current_description" "edited_description"
-    if (( ${#edited_description} >= 0 &&\
-          ${#edited_description} <= 350 ))
-    then
-      printf "Description saved.\n"
-      description_saved="true"
-      description_exceeds_limit="false"
-      break 1
-    else
-      printf "Description exceeds the 350 character limit.\n"
-      description_exceeds_limit="true"
-    fi    
-  done
-fi
-# Confirm correct description
-if [[ "$description_saved" == "true" ]]
-then
-  printf "Description: \"$edited_description\"\n"
-  while true
-  do
-    printf "Is this correct? Yes/No: "
-    read -r "confirm_edited_description"
-    confirm_edited_description="$(printf "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
-    if [[ "$confirm_edited_description" == yes ||\
-          "$confirm_edited_description" == y ]]
-    then
-      confirm_edited_description=true
-      break 1
-    elif [[ "$confirm_edited_description" == no ||\
-            "$confirm_edited_description" == n ]]
-    then
-      confirm_edited_description=false
-      break 1
-    fi
-  done
-fi
-
-# If license file exists, ask user if they want to edit it before continuing 
-while [[ "$lic_file_exists_repo" == "true" ]]
+while [[ -z "$confirm_edited_description" ||\
+         "$confirm_edited_description" == "false" ]]
 do
-  printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
-  read -r "confirm_edit_license"
-  confirm_edit_license="$(printf "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
-  if [[ "$confirm_edit_license" == yes ||\
-   "$confirm_edit_license" == y ]]
+  if [[ "$git_repo_created" == "true" ||\
+        "$git_repo_exists" == "true" ]]
   then
-    edit_license_confirmed=true
-    break 1
-  elif [[ "$confirm_edit_license" == no ||\
-   "$confirm_edit_license" == n ]]
+    current_description="$(gh repo view "$git_username/$repo_name" --json "description" |\
+      awk -F '"' '{print $4}')"
+    while [[ -z "$description_exceeds_limit" ||\
+             "$description_exceeds_limit" == "true" ]]
+    do
+      printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
+      if [[ -z "$current_description" ]]
+      then
+        current_description="$(printf "No description, website, or topics provided. ")"
+      fi
+      if [[ "$description_exceeds_limit" == "true" ]]
+      then
+        current_description="$edited_description"
+      fi
+      read -r -e -i "$current_description" "edited_description"
+      if (( "${#edited_description}" >= "0" &&\
+            "${#edited_description}" <= "350" ))
+      then
+        printf "Description saved.\n"
+        description_saved="true"
+        description_exceeds_limit="false"
+        break 1
+      else
+        printf "Description exceeds the 350 character limit.\n"
+        description_exceeds_limit="true"
+      fi    
+    done
+  fi
+  # Confirm correct description
+  if [[ "$description_saved" == "true" ]]
   then
-    edit_license_confirmed=false
-    break 1
+    printf "Description: \"$edited_description\"\n"
+    while true
+    do
+      printf "Is this correct? Yes/No: "
+      read -r "confirm_edited_description"
+      confirm_edited_description="$(printf "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
+      if [[ "$confirm_edited_description" == yes ||\
+            "$confirm_edited_description" == y ]]
+      then
+        confirm_edited_description=true
+        break 1
+      elif [[ "$confirm_edited_description" == no ||\
+              "$confirm_edited_description" == n ]]
+      then
+        confirm_edited_description=false
+      fi
+    done
   fi
 done
+
+
 
 
 
