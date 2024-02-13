@@ -511,10 +511,10 @@ if [[ "$git_repo_created" == "true" ||\
 then
   current_description="$(gh repo view "$git_username/$repo_name" --json "description" |\
     awk -F '"' '{print $4}')"
-  printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
   while [[ -z "$description_exceeds_limit" ||\
            "$description_exceeds_limit" == "true" ]]
   do
+    printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
     if [[ -z "$current_description" ]]
     then
       current_description="$(printf "No description, website, or topics provided. ")"
