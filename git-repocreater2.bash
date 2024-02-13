@@ -541,7 +541,6 @@ do
           confirm_edited_description="false"
           break 1
         fi
-        printf "Invalid input. Please enter Yes/No.\n"
       done
     else
       printf "Description exceeds the 350 character limit.\n"
@@ -549,9 +548,23 @@ do
   fi
 done
 
+if [[ "$confirm_edited_description" == "true" &&\ 
+      "$edited_description" != "$current_description" ]]
+then
+  edited_description_differs=true
+fi
 
-
-
+if [[ "$edited_description_differs" == "true" ]]
+then
+    while [[ -z "$description_uploaded" ]]
+    do
+      if gh repo edit "$git_username/$repo_name" --description "$edited_description"
+      then
+        printf "Description successfully edited.\n"
+        description_uploaded=true
+      fi
+    done
+fi
 
 # Forcefully push all local files to remote repository
 if [[ "$git_repo_created" == "true" ||\
