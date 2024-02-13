@@ -559,7 +559,7 @@ do
       then
         description_saved="false"
         confirm_edited_description="false"
-        continue
+        break 1
       fi
     done
   fi
