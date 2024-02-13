@@ -170,22 +170,41 @@ else
   printf "Repository directory exists at: \"$HOME/.github/$repo_name.git\".\n"
   repo_dir_exists=true
 fi
-# Forcefully copy file into repository, overwriting previous file
-if [[ "$repo_dir_exists" == true ]]
+filename="$(basename "$1")"
+if [[ -e "$HOME/.github/$repo_name.git/$filename" ]]
 then
-  filename="$(basename "$1")"
+  printf "\"$filename\" already exists in \"$HOME/.github/$repo_name.git/$filename\".\n"
+  filename_exists=true
+else
+  printf "\"$filename\" does not exists in \"$HOME/.github/$repo_name.git/$filename\".\n"
+fi
+# Check to see if selected file is different from what's in the repo already
+if [[ "$repo_dir_exists"  == true ||\
+      "$filename_exists" == true ]]
+then
+  if ! diff --brief "$1" "$HOME/.github/$repo_name.git/$filename" &> /dev/null
+  then
+    printf "\"$filename\" differs from \"$repo_name.git/$filename\".\n"
+    filename_differs_from_repo=true
+  fi
+fi
+# Forcefully copy file into repository, overwriting previous file
+if [[ "$repo_dir_exists" == true ||\
+      "$filename_differs_from_repo" == true ]]
+then
   while [[ -z "$content_copied_to_repo" ]]
   do
-    printf "Copying contents of $filename into \"$HOME/.github/$repo_name.git\" \n"
+    printf "Copying \"$filename\" into \"$HOME/.github/$repo_name.git\".\n"
     if cp --force --recursive "$1" "$HOME/.github/$repo_name.git"
     then
       printf "File or directory successfully copied into repository.\n"
       content_copied_to_repo=true
       break 1
-    else
-      printf "File or directory failed to copy into repository\n"
     fi
   done
+else
+  printf "\"$filename\" is the same as \"$HOME/.github/$repo_name.git/$filename\".\n"
+  printf "Not copying file or directory added as argument.\n"
 fi
 #
 ## Choosing a license template, editing it, or making your own.
