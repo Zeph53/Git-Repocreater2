@@ -542,7 +542,6 @@ while [[ -z "$confirm_edited_description" || "$confirm_edited_description" == "f
       elif [[ "$confirm_edited_description" == "no" || "$confirm_edited_description" == "n" ]]; then
         description_saved="false"
         confirm_edited_description="false"
-        continue
       fi
     done
   fi
