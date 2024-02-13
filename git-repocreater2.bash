@@ -557,6 +557,7 @@ do
       elif [[ "$confirm_edited_description" == "no" ||\
               "$confirm_edited_description" == "n" ]]
       then
+        description_saved="false"
         confirm_edited_description="false"
         break 1
       fi
