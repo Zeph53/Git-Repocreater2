@@ -28,7 +28,8 @@
 #
 ## Launching parameters
 # Using --help option will show a help menu with directions then exit
-if [[ $1 == "--help" || $1 == "-h" ]]
+if [[ "$1" == "--help" ||\
+      "$1" == "-h" ]]
 then
   printf "Usage:
 Add a file or folder to the command as an argument.
@@ -55,7 +56,7 @@ See \"https://www.gnu.org/licenses/gpl-3.0.txt\"
 "
   exit 1
 # Using --shit will bring up a shit usage menu then exit
-elif [[ $1 == "--shit" ]]
+elif [[ "$1" == "--shit" ]]
 then
   printf 'Usage:
 shit
@@ -64,7 +65,7 @@ shit
 file
 # Warn the user that the script must include a file or directory as an argument
 else
-  if [[ ! -e $1 ]]
+  if [[ ! -e "$1" ]]
   then
     printf "Add a file or folder to the command as an argument.\n"
     exit 1
@@ -79,7 +80,7 @@ then
   while true
   do
     # Prompt user for Personal Access Token until provided
-    read -r -e -p "GitHub Personal Access Token: " gh_pat
+    read -r -e -p "GitHub Personal Access Token: " "gh_pat"
     # Check if token is empty
     if [[ -z "$gh_pat" ]]
     then
@@ -93,20 +94,20 @@ then
         printf "Successfully authenticated with GitHub.\n"
         gh config set git_protocol https &> /dev/null
         gh auth setup-git &> /dev/null
-        break
+        break 1
       fi
     fi
   done
 else
   # Tell the user they are already logged in
-  printf "You are already authenticated with GitHub. Continuing.\n"
+  printf "You are already authenticated with GitHub.\n"
 fi
 #
 ## Generating a .netrc file with an access token in it. 
 #
 ## Creating a repository
 # Generating a name for the new repository
-if [[ -e $1 ]]
+if [[ -e "$1" ]]
 then
   while true
   do
@@ -116,14 +117,14 @@ then
     # Flag to tell the script not to prompt user when empty name
     repo_name_empty_msg_shown=false
     # Prompt the user to alter the repo name of the file/dir in the command argument
-    if ! $repo_name_empty_msg_shown 
+    if ! "$repo_name_empty_msg_shown"
     then
       printf "Modify the name of the new repository:\n"
     fi
     while true
     do
       # Use temp file as prompt to read user's modification
-      read -r -e -i "$(cat "$repo_name_temp")" repo_name
+      read -r -e -i "$(cat "$repo_name_temp")" "repo_name"
       if [[ -z "$repo_name" ]]
       then
         # Prevent user from using an empty repo name
@@ -131,7 +132,7 @@ then
         # Flag to prevent loop from displaying same message
         repo_name_empty_msg_shown=true
       else
-        break
+        break 1
       fi
     done
     # Confirm with the user if the name is correct
@@ -142,13 +143,15 @@ then
         printf "The chosen name for the new repository is: \"$repo_name\".\n"
       fi
       printf "Is this correct? Yes/No: "
-      read -r confirm_repo_name
-      if [[ "$confirm_repo_name" == yes || "$confirm_repo_name" == y ]]
+      read -r "confirm_repo_name"
+      if [[ "$confirm_repo_name" == "yes" ||\
+            "$confirm_repo_name" == "y" ]]
       then
         break 2 
-      elif [[ "$confirm_repo_name" == no || "$confirm_repo_name" == n ]]
+      elif [[ "$confirm_repo_name" == "no" ||\
+              "$confirm_repo_name" == "n" ]]
       then
-        break
+        break 1
       else
         chosen_name_message_shown=true
       fi
@@ -160,11 +163,11 @@ fi
 #
 ## Creating a working directory
 # Check for existing repo with same name
-if ! [[ -d $HOME/.github/$repo_name.git ]]
+if ! [[ -d "$HOME/.github/$repo_name.git" ]]
 then
   printf "Local repository does not exist at: \"$HOME/.github/$repo_name.git\". Creating it.\n"
   # Create a repo directory and copy contents of the argument to it
-  mkdir -p $HOME/.github/$repo_name.git
+  mkdir -p "$HOME/.github/$repo_name.git"
   repo_dir_exists=true
 else
   printf "Repository directory exists at: \"$HOME/.github/$repo_name.git\".\n"
@@ -179,8 +182,8 @@ else
   printf "\"$filename\" does not exists in \"$HOME/.github/$repo_name.git/$filename\".\n"
 fi
 # Check to see if selected file is different from what's in the repo already
-if [[ "$repo_dir_exists"  == true ||\
-      "$filename_exists" == true ]]
+if [[ "$repo_dir_exists"  == "true" ||\
+      "$filename_exists" == "true" ]]
 then
   if ! diff --brief "$1" "$HOME/.github/$repo_name.git/$filename" &> /dev/null
   then
@@ -189,8 +192,8 @@ then
   fi
 fi
 # Forcefully copy file into repository, overwriting previous file
-if [[ "$repo_dir_exists" == true ||\
-      "$filename_differs_from_repo" == true ]]
+if [[ "$repo_dir_exists" == "true" ||\
+      "$filename_differs_from_repo" == "true" ]]
 then
   while [[ -z "$content_copied_to_repo" ]]
   do
@@ -233,18 +236,20 @@ else
   lic_file_exists_repo=false
 fi
 # Confirm if wanting to download a new license file
-if [[ "$lic_file_exists_repo" == true ]]
+if [[ "$lic_file_exists_repo" == "true" ]]
 then
   while true
   do
     printf "Do you want to select/download another license file? Yes/No: "
     read -r select_new_license
     select_new_license="$(printf "%s" "$select_new_license" | tr '[:upper:]' '[:lower:]')"
-    if [[ "$select_new_license" == yes || "$select_new_license" == y ]]
+    if [[ "$select_new_license" == yes ||\
+          "$select_new_license" == y ]]
     then
       select_new_license_confirmed=true
       break 1
-    elif [[ "$select_new_license" == no || "$select_new_license" == n ]]
+    elif [[ "$select_new_license" == no ||\
+            "$select_new_license" == n ]]
     then
       select_new_license_confirmed=false
       break 1
@@ -255,9 +260,11 @@ else
   select_new_license_confirmed=true
 fi
 # After confirmation, select a license template, display it, confirm if correct
-while [[ "$select_new_license_confirmed" == true || "$selected_license_confirmed" == false ]]
+while [[ "$select_new_license_confirmed" == "true" ||\
+         "$selected_license_confirmed" == false ]]
 do
-  if [[ "$select_new_license_confirmed" == true || "$lic_file_exists_repo" == false ]]
+  if [[ "$select_new_license_confirmed" == "true" ||\
+        "$lic_file_exists_repo" == false ]]
   then
     if [[ -z "$selected_license_confirmed" ]]
     then
@@ -277,14 +284,16 @@ do
           printf "Is this correct? Yes/No: "
           read -r confirm_selected_license
           confirm_selected_license="$(echo "$confirm_selected_license" | tr '[:upper:]' '[:lower:]')"
-          if [[ "$confirm_selected_license" == yes || "$confirm_selected_license" == y ]]
+          if [[ "$confirm_selected_license" == yes ||\
+                "$confirm_selected_license" == y ]]
           then
             selected_license_confirmed=true
             break 4
-          elif [[ "$confirm_selected_license" == no || "$confirm_selected_license" == n ]]
+          elif [[ "$confirm_selected_license" == no ||\
+                  "$confirm_selected_license" == n ]]
           then
             selected_license_confirmed=false
-            break
+            break 1
           fi
         done
       fi
@@ -292,7 +301,7 @@ do
   fi
 done
 # Non case sensitive letter selection options for url generation
-if [[ "$selected_license_confirmed" == true ]]
+if [[ "$selected_license_confirmed" == "true" ]]
 then
   case $selected_letter in
     [Aa]) license_file_url="https://www.gnu.org/licenses/agpl-3.0.txt";;
@@ -312,7 +321,8 @@ then
   esac
 fi
 # Check if license file exists, if not, downloads it. 
-if [[ -n "$license_file_url" || "$select_new_license_confirmed" == true ]]
+if [[ -n "$license_file_url" ||\
+      "$select_new_license_confirmed" == "true" ]]
 then
   license_name="$(printf "%s" "$license_names" | grep -oP "$selected_letter\]\K[^)]+")"
   license_file_name="$(echo "$license_name" | awk -F '(' '{print $1}' | awk '{$1=$1};1').txt"
@@ -337,7 +347,7 @@ then
   fi
 fi
 # Check if license.md in repo is different from the downloaded license file
-if [[ "$lic_file_exists_dir" == true && "$lic_file_exists_repo" == true ]]
+if [[ "$lic_file_exists_dir" == "true" && "$lic_file_exists_repo" == "true" ]]
 then
   if ! diff --brief "$license_file_path" "$HOME/.github/$repo_name.git/LICENSE.MD" &> /dev/null
   then
@@ -349,24 +359,26 @@ then
   fi
 fi
 # Confirm if overwrite license.md with downloaded licence file
-while [[ "$lic_file_exists_repo" == true && "$license_file_differs" == true ]]
+while [[ "$lic_file_exists_repo" == "true" && "$license_file_differs" == "true" ]]
 do
   printf "Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
   read -r confirm_copy_license
   confirm_copy_license="$(echo "$confirm_copy_license" | tr '[:upper:]' '[:lower:]')"
-  if [[ "$confirm_copy_license" == yes || "$confirm_copy_license" == y ]]
+  if [[ "$confirm_copy_license" == yes ||\
+        "$confirm_copy_license" == y ]]
   then
     copy_license_confirmed=true
     break 1
-  elif [[ "$confirm_copy_license" == no || "$confirm_copy_license" == n ]]
+  elif [[ "$confirm_copy_license" == no ||\
+          "$confirm_copy_license" == n ]]
   then
     copy_license_confirmed=false
     break 1
   fi
 done
 # Copy downloaded license file from license dir to repo dir after confirmation
-if [[ "$lic_file_exists_dir" == true &&\
- "$copy_license_confirmed" == true ||\
+if [[ "$lic_file_exists_dir" == "true" &&\
+ "$copy_license_confirmed" == "true" ||\
  "$lic_file_exists_repo" == false ]]
 then
   while true
@@ -387,7 +399,7 @@ then
   done
 fi
 # Confirm to edit the license.md in repo
-while [[ "$lic_file_exists_repo" == true ]]
+while [[ "$lic_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
   read -r confirm_edit_license
@@ -405,7 +417,7 @@ do
   fi
 done
 # Open license.md in repo with nano after confirmation
-if [[ "$edit_license_confirmed" == true ]]
+if [[ "$edit_license_confirmed" == "true" ]]
 then
   while [[ -z "$license_edited" ]]
   do
@@ -418,7 +430,7 @@ fi
 #
 ## Creating the remote git repository on GitHub
 # Initialize a local git repository
-if [[ "$lic_file_exists_repo" == true ]]
+if [[ "$lic_file_exists_repo" == "true" ]]
 then
   while [[ -z "$repo_git_init" ]]
   do
@@ -431,7 +443,7 @@ then
   done
 fi
 # Add files to staging in the local git repository
-if [[ "$repo_git_init" == true ]]
+if [[ "$repo_git_init" == "true" ]]
 then
   while [[ -z "$repo_git_added_all" ]]
   do
@@ -451,7 +463,7 @@ then
   done
 fi
 # Index files from staging to be ready for commit to GitHub
-if [[ "$repo_git_added_all" == true ]]
+if [[ "$repo_git_added_all" == "true" ]]
 then
   if ! git -C "$HOME/.github/$repo_name.git" commit -m "commit" | grep "changed"
   then
@@ -460,7 +472,7 @@ then
   repo_git_commited_all=true
 fi
 # Check to see if repository exists already on GitHub
-if [[ "$repo_git_commited_all" == true ]]
+if [[ "$repo_git_commited_all" == "true" ]]
 then
   git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
   git_repo_url="https://github.com/$git_username/$repo_name"
@@ -474,7 +486,7 @@ then
   fi
 fi
 # Create a remote repository
-if [[ "$repo_git_commited_all" == true &&\
+if [[ "$repo_git_commited_all" == "true" &&\
       "$git_repo_exists" == false ]]
 then
   printf "Attempting to create a new repository on GitHub.\n"
@@ -489,8 +501,8 @@ fi
 
 
 # Forcefully push all local files to remote repository
-if [[ "$git_repo_created" == true ||\
-      "$git_repo_exists" == true ]]
+if [[ "$git_repo_created" == "true" ||\
+      "$git_repo_exists" == "true" ]]
 then
   printf "Pushing changes to GitHub...\n"
   git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
@@ -498,15 +510,15 @@ then
 fi
 
 # Check if the content was indeed pushed to GitHub
-if [[ "$git_repo_pushed" == true ]]
+if [[ "$git_repo_pushed" == "true" ]]
 then
   printf "Checking if the content was pushed to GitHub...\n"
-  latest_commit=$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)
+  latest_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
   if [[ "$previous_commit" != "$latest_commit" ]]
   then
     printf "Content \"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
   else
-    printf "No new commits detected. Content \"$filename\" may not have been pushed successfully.\n"
+    printf "No new commits detected. \"$filename\" may not have been pushed successfully.\n"
   fi
 fi
 
