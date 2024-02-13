@@ -558,7 +558,7 @@ do
               "$confirm_edited_description" == n ]]
       then
         confirm_edited_description=false
-        break 2
+        continue
       fi
     done
   fi
