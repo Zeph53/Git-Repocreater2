@@ -517,14 +517,13 @@ then
   do
     if [[ -z "$current_description" ]]
     then
-      $current_description="NO DESCRIPTION"
+      $current_description="$(printf "No description, website, or topics provided. ")"
     fi
     if [[ "$description_exceeds_limit" == "true" ]]
     then
       $current_description="$edited_description"
     fi
-    read -r -e -i "$current_description" --json "description" |\
-    awk -F '"' '{print $4}' "edited_description"
+    read -r -e -i "$current_description" "edited_description"
     if [[ -z "$edited_description" ||\
           "${#edited_description}" -ge "350" ]]
     then
@@ -539,8 +538,15 @@ then
 fi
 if [[ "$description_saved" == "true" ]]
 then
-printf "$edited_description\n"
+  printf "Description: \"$edited_description\"\n"
 fi
+
+
+
+
+
+
+
 
 # Forcefully push all local files to remote repository
 if [[ "$git_repo_created" == "true" ||\
