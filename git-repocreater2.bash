@@ -241,7 +241,7 @@ then
   while true
   do
     printf "Do you want to select/download another license file? Yes/No: "
-    read -r select_new_license
+    read -r "select_new_license"
     select_new_license="$(printf "%s" "$select_new_license" | tr '[:upper:]' '[:lower:]')"
     if [[ "$select_new_license" == yes ||\
           "$select_new_license" == y ]]
@@ -261,10 +261,10 @@ else
 fi
 # After confirmation, select a license template, display it, confirm if correct
 while [[ "$select_new_license_confirmed" == "true" ||\
-         "$selected_license_confirmed" == false ]]
+         "$selected_license_confirmed" == "false" ]]
 do
   if [[ "$select_new_license_confirmed" == "true" ||\
-        "$lic_file_exists_repo" == false ]]
+        "$lic_file_exists_repo" == "false" ]]
   then
     if [[ -z "$selected_license_confirmed" ]]
     then
@@ -273,7 +273,7 @@ do
     while true
     do
       printf "Enter the letter for the license template you want to use: "
-      read -r selected_letter
+      read -r "selected_letter"
       selected_letter=$(echo "$selected_letter" | tr '[:lower:]' '[:upper:]')
       if [[ "$selected_letter" =~ ^[A-M]$ ]]
       then
@@ -282,7 +282,7 @@ do
         while true
         do
           printf "Is this correct? Yes/No: "
-          read -r confirm_selected_license
+          read -r "confirm_selected_license"
           confirm_selected_license="$(echo "$confirm_selected_license" | tr '[:upper:]' '[:lower:]')"
           if [[ "$confirm_selected_license" == yes ||\
                 "$confirm_selected_license" == y ]]
@@ -362,7 +362,7 @@ fi
 while [[ "$lic_file_exists_repo" == "true" && "$license_file_differs" == "true" ]]
 do
   printf "Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
-  read -r confirm_copy_license
+  read -r "confirm_copy_license"
   confirm_copy_license="$(echo "$confirm_copy_license" | tr '[:upper:]' '[:lower:]')"
   if [[ "$confirm_copy_license" == yes ||\
         "$confirm_copy_license" == y ]]
@@ -379,7 +379,7 @@ done
 # Copy downloaded license file from license dir to repo dir after confirmation
 if [[ "$lic_file_exists_dir" == "true" &&\
  "$copy_license_confirmed" == "true" ||\
- "$lic_file_exists_repo" == false ]]
+ "$lic_file_exists_repo" == "false" ]]
 then
   while true
   do
@@ -402,7 +402,7 @@ fi
 while [[ "$lic_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
-  read -r confirm_edit_license
+  read -r "confirm_edit_license"
   confirm_edit_license="$(echo "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
   if [[ "$confirm_edit_license" == yes ||\
    "$confirm_edit_license" == y ]]
@@ -474,8 +474,6 @@ fi
 # Check to see if repository exists already on GitHub
 if [[ "$repo_git_commited_all" == "true" ]]
 then
-  git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
-  git_repo_url="https://github.com/$git_username/$repo_name"
   if gh repo view "$git_username/$repo_name" --json name &> /dev/null
   then
     printf "Repository already exists at: \"$git_repo_url\"\n"
@@ -487,7 +485,7 @@ then
 fi
 # Create a remote repository
 if [[ "$repo_git_commited_all" == "true" &&\
-      "$git_repo_exists" == false ]]
+      "$git_repo_exists" == "false" ]]
 then
   printf "Attempting to create a new repository on GitHub.\n"
   if gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public
@@ -500,15 +498,59 @@ then
 fi
 
 
-# Forcefully push all local files to remote repository
+
+
+
+
+#
+## Creating a description for your repository
 if [[ "$git_repo_created" == "true" ||\
       "$git_repo_exists" == "true" ]]
+then
+  git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
+  git_repo_url="https://github.com/$git_username/$repo_name"
+  current_description="$(gh repo view "$git_username/$repo_name" --json "description" |\
+    awk -F '"' '{print $4}')"
+  printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
+  while [[ -z "$description_exceeds_limit" ||\
+           "$description_exceeds_limit" == "true" ]]
+  do
+    if [[ -z "$current_description" ]]
+    then
+      $current_description="NO DESCRIPTION"
+    fi
+    if [[ "$description_exceeds_limit" == "true" ]]
+    then
+      $current_description="$edited_description"
+    fi
+    read -r -e -i "$current_description" --json "description" |\
+    awk -F '"' '{print $4}' "edited_description"
+    if [[ -z "$edited_description" ||\
+          "${#edited_description}" -ge "350" ]]
+    then
+      printf "Description saved.\n"
+      description_saved="true"
+      break 1
+    else
+      printf "Description exceeds the 350 character limit.\n"
+      description_exceeds_limit="true"
+    fi
+  done
+fi
+if [[ "$description_saved" == "true" ]]
+then
+printf "$edited_description\n"
+fi
+
+# Forcefully push all local files to remote repository
+if [[ "$git_repo_created" == "true" ||\
+      "$git_repo_exists" == "true" &&\
+      "$description_saved" == "true" ]]
 then
   printf "Pushing changes to GitHub...\n"
   git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
   git_repo_pushed=true
 fi
-
 # Check if the content was indeed pushed to GitHub
 if [[ "$git_repo_pushed" == "true" ]]
 then
@@ -516,10 +558,8 @@ then
   latest_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
   if [[ "$previous_commit" != "$latest_commit" ]]
   then
-    printf "Content \"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
+    printf "\"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
   else
     printf "No new commits detected. \"$filename\" may not have been pushed successfully.\n"
   fi
 fi
-
-
