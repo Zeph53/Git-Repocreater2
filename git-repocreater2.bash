@@ -521,7 +521,7 @@ then
     fi
     if [[ "$description_exceeds_limit" == "true" ]]
     then
-      $current_description="$edited_description"
+      current_description="$edited_description"
     fi
     read -r -e -i "$current_description" "edited_description"
     if [[ -z "$edited_description" ||\
