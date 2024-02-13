@@ -524,25 +524,23 @@ then
       current_description="$edited_description"
     fi
     read -r -e -i "$current_description" "edited_description"
-    if [[ -z "$edited_description" ||\
-          "${#edited_description}" -ge "350" ]]
+    if (( ${#edited_description} >= 0 &&\
+      ${#edited_description} <= 350 ))
     then
       printf "Description saved.\n"
       description_saved="true"
+      description_exceeds_limit="false"
       break 1
     else
       printf "Description exceeds the 350 character limit.\n"
       description_exceeds_limit="true"
-    fi
+    fi    
   done
 fi
 if [[ "$description_saved" == "true" ]]
 then
   printf "Description: \"$edited_description\"\n"
 fi
-
-
-
 
 
 
