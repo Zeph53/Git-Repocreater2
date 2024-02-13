@@ -548,7 +548,7 @@ do
   fi
 done
 
-if [[ "$confirm_edited_description" == "true" &&\ 
+if [[ "$confirm_edited_description" == "true" &&\
       "$edited_description" != "$current_description" ]]
 then
   edited_description_differs=true
