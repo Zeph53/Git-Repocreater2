@@ -506,7 +506,6 @@ fi
 
 #
 ## Creating a description for your repository
-## Creating a description for your repository
 while [[ -z "$confirm_edited_description" || "$confirm_edited_description" != "true" ]]; do
   if [[ "$git_repo_created" == "true" || "$git_repo_exists" == "true" ]]; then
     current_description="$(gh repo view "$git_username/$repo_name" --json "description" | awk -F '"' '{print $4}')"
@@ -535,7 +534,10 @@ while [[ -z "$confirm_edited_description" || "$confirm_edited_description" != "t
   fi
 done
 
-
+if [[ "$confirm_edited_description" == "true" ]]
+then
+  printf "asjdhasdhasdusahd\n"
+fi
 
 
 
@@ -544,7 +546,7 @@ done
 # Forcefully push all local files to remote repository
 if [[ "$git_repo_created" == "true" ||\
       "$git_repo_exists" == "true" &&\
-      "$description_saved" == "true" ]]
+      "$confirm_edited_description" == "true" ]]
 then
   printf "Pushing changes to GitHub...\n"
   git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
