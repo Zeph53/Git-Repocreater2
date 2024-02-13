@@ -405,12 +405,12 @@ do
   read -r "confirm_edit_license"
   confirm_edit_license="$(printf "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
   if [[ "$confirm_edit_license" == yes ||\
-   "$confirm_edit_license" == y ]]
+        "$confirm_edit_license" == y ]]
   then
     edit_license_confirmed=true
     break 1
   elif [[ "$confirm_edit_license" == no ||\
-   "$confirm_edit_license" == n ]]
+          "$confirm_edit_license" == n ]]
   then
     edit_license_confirmed=false
     break 1
@@ -559,7 +559,7 @@ do
       then
         description_saved="false"
         confirm_edited_description="false"
-        break 2
+        continue
       fi
     done
   fi
