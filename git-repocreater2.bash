@@ -680,8 +680,12 @@ if
   [[ "$confirm_edited_description" == "true" ]]
 then
   printf "Pushing changes to GitHub...\n"
-  git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
-  git_repo_pushed="true"
+  if
+    git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
+  then
+    printf "Pushing \"$filename\" to \"$git_repo_url\".\n"
+    git_repo_pushed="true"
+  fi
 fi
 # Check if the content was indeed pushed to GitHub
 if 
