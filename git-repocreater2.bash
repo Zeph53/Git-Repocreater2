@@ -553,7 +553,7 @@ if [[ "$confirm_edited_description" == "true" && "$edited_description" != "$curr
 fi
 # Push the new description to GitHub if it's different from the default
 if [[ "$edited_description_differs" == "true" ]]; then
-  if [[ "$edited_description" != "No description, website, or topics provided." ]]; then
+  if [[ -n "$edited_description" && "$edited_description" != "No description, website, or topics provided." ]]; then
     while [[ -z "$description_uploaded" ]]; do
       if gh repo edit "$git_username/$repo_name" --description "$edited_description"; then
         printf "Description successfully edited.\n"
