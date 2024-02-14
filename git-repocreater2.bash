@@ -74,7 +74,8 @@ fi
 ## Logging into GitHub using GH
 # Check if user is logged in
 if 
-  ! gh auth status &> /dev/null
+  ! gh auth status &>\
+      /dev/null
 then
   printf "You are not authenticated with GitHub.\n"  
   while 
@@ -90,13 +91,17 @@ then
     else
       # Attempt to login using token variable
       if 
-        ! printf "$gh_pat" | gh auth login --with-token &> /dev/null
+        ! printf "$gh_pat" |\
+            gh auth login --with-token &>\
+              /dev/null
       then
         printf "Failed to authenticate with GitHub. Please try again.\n"
       else
         printf "Successfully authenticated with GitHub.\n"
-        gh config set git_protocol https &> /dev/null
-        gh auth setup-git &> /dev/null
+        gh config set git_protocol https &>\
+          /dev/null
+        gh auth setup-git &>\
+          /dev/null
         break 1
       fi
     fi
@@ -117,8 +122,11 @@ then
     true
   do
     # Create temp file and generate repo name out of file or directory name
-    repo_name_temp="$(mktemp)"
-    printf "$1" | awk -F '/' '{printf$NF}' > "$repo_name_temp"
+    repo_name_temp="$(\
+      mktemp)"
+    printf "$1" |\
+      awk -F '/' '{printf$NF}' >\
+        "$repo_name_temp"
     # Flag to tell the script not to prompt user when empty name
     repo_name_empty_msg_shown=false
     # Prompt the user to alter the repo name of the file/dir in the command argument
@@ -131,7 +139,8 @@ then
       true
     do
       # Use temp file as prompt to read user's modification
-      read -r -e -i "$(cat "$repo_name_temp")" "repo_name"
+      read -r -e -i "$(\
+        cat "$repo_name_temp")" "repo_name"
       if 
         [[ -z "$repo_name" ]]
       then
@@ -166,7 +175,8 @@ then
         chosen_name_message_shown=true
       fi
     done
-    rm -r "$repo_name_temp" &> /dev/null
+    rm -r "$repo_name_temp" &>\
+      /dev/null
   done
 fi
 #
@@ -182,7 +192,8 @@ else
   printf "Repository directory exists at: \"$HOME/.github/$repo_name.git\".\n"
   repo_dir_exists=true
 fi
-filename="$(basename "$1")"
+filename="$(\
+  basename "$1")"
 if 
   [[ -e "$HOME/.github/$repo_name.git/$filename" ]]
 then
@@ -197,7 +208,8 @@ if
   [[ "$filename_exists" == "true" ]]
 then
   if 
-    ! diff --brief "$1" "$HOME/.github/$repo_name.git/$filename" &> /dev/null
+    ! diff --brief "$1" "$HOME/.github/$repo_name.git/$filename" &>\
+        /dev/null
   then
     printf "\"$filename\" differs from \"$repo_name.git/$filename\".\n"
     filename_differs_from_repo=true
@@ -260,14 +272,16 @@ then
   do
     printf "Do you want to select/download another license file? Yes/No: "
     read -r "select_new_license"
-    select_new_license="$(printf "%s" "$select_new_license" | tr '[:upper:]' '[:lower:]')"
-    if [[ "$select_new_license" == yes ]] ||
-       [[ "$select_new_license" == y ]]
+    select_new_license="$(\
+      printf "%s" "$select_new_license" |\
+        tr '[:upper:]' '[:lower:]')"
+    if [[ "$select_new_license" == "yes" ]] ||
+       [[ "$select_new_license" == "y" ]]
     then
       select_new_license_confirmed=true
       break 1
-    elif [[ "$select_new_license" == no ]] ||
-         [[ "$select_new_license" == n ]]
+    elif [[ "$select_new_license" == "no" ]] ||
+         [[ "$select_new_license" == "n" ]]
     then
       select_new_license_confirmed=false
       break 1
@@ -296,26 +310,32 @@ do
     do
       printf "Enter the letter for the license template you want to use: "
       read -r "selected_letter"
-      selected_letter=$(printf "$selected_letter" | tr '[:lower:]' '[:upper:]')
+      selected_letter=$(\
+        printf "$selected_letter" |\
+          tr '[:lower:]' '[:upper:]')
       if 
-        [[ "$selected_letter" =~ ^[A-M]$ ]]
+        [[ "$selected_letter" =~ "^[A-M]$" ]]
       then
-        selected_license_file="$(printf "%s" "$license_names" | grep "\[$selected_letter\]")"
+        selected_license_file="$(\
+          printf "%s" "$license_names" |\
+            grep "\[$selected_letter\]")"
         printf "The chosen license for the new repository is: \"$selected_license_file\".\n"
         while 
           true
         do
           printf "Is this correct? Yes/No: "
           read -r "confirm_selected_license"
-          confirm_selected_license="$(printf "$confirm_selected_license" | tr '[:upper:]' '[:lower:]')"
+          confirm_selected_license="$(\
+            printf "$confirm_selected_license" |\
+              tr '[:upper:]' '[:lower:]')"
           if 
-            [[ "$confirm_selected_license" == yes ]] ||
-            [[ "$confirm_selected_license" == y ]]
+            [[ "$confirm_selected_license" == "yes" ]] ||
+            [[ "$confirm_selected_license" == "y" ]]
           then
             selected_license_confirmed=true
             break 4
-          elif [[ "$confirm_selected_license" == no ]] ||
-               [[ "$confirm_selected_license" == n ]]
+          elif [[ "$confirm_selected_license" == "no" ]] ||
+               [[ "$confirm_selected_license" == "n" ]]
           then
             selected_license_confirmed=false
             break 1
@@ -329,7 +349,7 @@ done
 if 
   [[ "$selected_license_confirmed" == "true" ]]
 then
-  case $selected_letter in
+  case "$selected_letter" in
     [Aa]) license_file_url="https://www.gnu.org/licenses/agpl-3.0.txt";;
     [Bb]) license_file_url="https://www.apache.org/licenses/LICENSE-2.0.txt";;
     [Cc]) license_file_url="https://spdx.org/licenses/BSD-2-Clause.txt";;
@@ -351,8 +371,13 @@ if
   [[ -n "$license_file_url" ]] ||
   [[ "$select_new_license_confirmed" == "true" ]]
 then
-  license_name="$(printf "%s" "$license_names" | grep -oP "$selected_letter\]\K[^)]+")"
-  license_file_name="$(printf "$license_name" | awk -F '(' '{print $1}' | awk '{$1=$1};1').txt"
+  license_name="$(\
+    printf "%s" "$license_names" |\
+      grep -oP "$selected_letter\]\K[^)]+")"
+  license_file_name="$(\
+    printf "$license_name" |\
+      awk -F '(' '{print $1}' |\
+        awk '{$1=$1};1').txt"
   license_file_path="$HOME/.github/LICENSES/${license_file_name}"
   if 
     [[ -f "$license_file_path" ]]
@@ -382,7 +407,8 @@ if
   [[ "$lic_file_exists_repo" == "true" ]]
 then
   if 
-    ! diff --brief "$license_file_path" "$HOME/.github/$repo_name.git/LICENSE.MD" &> /dev/null
+    ! diff --brief "$license_file_path" "$HOME/.github/$repo_name.git/LICENSE.MD" &>\
+        /dev/null
   then
     printf "\"LICENSE.MD\" file is different from the selected license.\n"
     license_file_differs=true
@@ -398,16 +424,18 @@ while
 do
   printf "Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
   read -r "confirm_copy_license"
-  confirm_copy_license="$(printf "$confirm_copy_license" | tr '[:upper:]' '[:lower:]')"
+  confirm_copy_license="$(\
+    printf "$confirm_copy_license" |\
+      tr '[:upper:]' '[:lower:]')"
   if 
-    [[ "$confirm_copy_license" == yes ]] ||
-    [[ "$confirm_copy_license" == y ]]
+    [[ "$confirm_copy_license" == "yes" ]] ||
+    [[ "$confirm_copy_license" == "y" ]]
   then
     copy_license_confirmed=true
     break 1
   elif 
-    [[ "$confirm_copy_license" == no ]] ||
-    [[ "$confirm_copy_license" == n ]]
+    [[ "$confirm_copy_license" == "no" ]] ||
+    [[ "$confirm_copy_license" == "n" ]]
   then
     copy_license_confirmed=false
     break 1
@@ -445,16 +473,18 @@ while
 do
   printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
   read -r "confirm_edit_license"
-  confirm_edit_license="$(printf "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
+  confirm_edit_license="$(\
+    printf "$confirm_edit_license" |\
+      tr '[:upper:]' '[:lower:]')"
   if 
-    [[ "$confirm_edit_license" == yes ]] ||
-    [[ "$confirm_edit_license" == y ]]
+    [[ "$confirm_edit_license" == "yes" ]] ||
+    [[ "$confirm_edit_license" == "y" ]]
   then
     edit_license_confirmed=true
     break 1
   elif 
-    [[ "$confirm_edit_license" == no ]] ||
-    [[ "$confirm_edit_license" == n ]]
+    [[ "$confirm_edit_license" == "no" ]] ||
+    [[ "$confirm_edit_license" == "n" ]]
   then
     edit_license_confirmed=false
     break 1
@@ -482,7 +512,8 @@ then
   while 
     [[ -z "$repo_git_init" ]]
   do
-    git init "$HOME/.github/$repo_name.git" &> /dev/null
+    git init "$HOME/.github/$repo_name.git" &>\
+      /dev/null
     if 
       [[ -d "$HOME/.github/$repo_name.git/.git" ]]
     then
@@ -501,8 +532,11 @@ then
     if 
       git -C "$HOME/.github/$repo_name.git" add -A
     then
-      status="$(git -C "$HOME/.github/$repo_name.git" status --porcelain)"
-      status_count="$(printf "$status\n" | wc -l)"
+      status="$(\
+        git -C "$HOME/.github/$repo_name.git" status --porcelain)"
+      status_count="$(\
+        printf "$status\n" |\
+          wc -l)"
       if 
         [[ "$status_count" -gt 0 ]]
       then
@@ -520,7 +554,8 @@ if
   [[ "$repo_git_added_all" == "true" ]]
 then
   if 
-    ! git -C "$HOME/.github/$repo_name.git" commit -m "commit" | grep "changed"
+    ! git -C "$HOME/.github/$repo_name.git" commit -m "commit" |\
+        grep "changed"
   then
     printf "There was nothing to commit that wasn't already commited.\n"
   fi
@@ -530,10 +565,13 @@ fi
 if 
   [[ "$repo_git_commited_all" == "true" ]]
 then
-  git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
+  git_username="$(\
+    cat ~/.config/gh/hosts.yml |\
+    awk '/user:/ {printf $NF}')"
   git_repo_url="https://github.com/$git_username/$repo_name"
   if 
-    gh repo view "$git_username/$repo_name" --json name &> /dev/null
+    gh repo view "$git_username/$repo_name" --json name &>\
+      /dev/null
   then
     printf "Repository already exists at: \"$git_repo_url\"\n"
     git_repo_exists=true
@@ -557,8 +595,7 @@ then
     printf "GitHub repository creation failed at: \"$git_repo_url\"\n"
   fi
 fi
-#
-## Creating a description for your repository
+# Creating a description for your repository
 while 
   [[ -z "$confirm_edited_description" ]] ||
   [[ "$confirm_edited_description" != "true" ]]
@@ -566,8 +603,9 @@ do
   if [[ "$git_repo_created" == "true" ]] ||
      [[ "$git_repo_exists" == "true" ]]
   then
-    current_description="$(gh repo view "$git_username/$repo_name" --json "description" |\
-    awk -F '"' '{print $4}')"
+    current_description="$(\
+      gh repo view "$git_username/$repo_name" --json "description" |\
+        awk -F '"' '{print $4}')"
     printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
     if 
       [[ -z "$current_description" ]]
@@ -586,8 +624,9 @@ do
       do
         printf "Is this correct? Yes/No: "
         read -r "confirm_edited_description"
-        confirm_edited_description="$(printf "%s" "$confirm_edited_description" |\
-        tr '[:upper:]' '[:lower:]')"
+        confirm_edited_description="$(\
+          printf "%s" "$confirm_edited_description" |\
+            tr '[:upper:]' '[:lower:]')"
         if 
           [[ "$confirm_edited_description" == "yes" ]] ||
           [[ "$confirm_edited_description" == "y" ]]
@@ -647,13 +686,14 @@ fi
 if 
   [[ "$git_repo_pushed" == "true" ]]
 then
-  printf "Checking if the content was pushed to GitHub...\n"
-  latest_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
+  printf "Checking if the content was pushed to GitHub.\n"
+  latest_commit="$(\
+    git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
   if 
     [[ "$previous_commit" != "$latest_commit" ]]
   then
     printf "\"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
   else
-    printf "No new commits detected. \"$filename\" may not have been pushed successfully.\n"
+    printf "No new commits detected. \"$filename\" may not have been pushed.\n"
   fi
 fi
