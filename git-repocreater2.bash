@@ -547,25 +547,23 @@ do
     fi
   fi
 done
-
-if [[ "$confirm_edited_description" == "true" &&\
-      "$edited_description" != "$current_description" ]]
-then
+# Check to see if the new description is different from the old one
+if [[ "$confirm_edited_description" == "true" && "$edited_description" != "$current_description" ]]; then
   edited_description_differs=true
 fi
 
-if [[ "$edited_description_differs" == "true" ]]
-then
-    while [[ -z "$description_uploaded" ]]
-    do
-      if gh repo edit "$git_username/$repo_name" --description "$edited_description"
-      then
+# Push the new description to GitHub if it's different from the default
+if [[ "$edited_description_differs" == "true" ]]; then
+  # Only edit if the description is not the default one
+  if [[ "$edited_description" != "No description, website, or topics provided." ]]; then
+    while [[ -z "$description_uploaded" ]]; do
+      if gh repo edit "$git_username/$repo_name" --description "$edited_description"; then
         printf "Description successfully edited.\n"
         description_uploaded=true
       fi
     done
+  fi
 fi
-
 # Forcefully push all local files to remote repository
 if [[ "$git_repo_created" == "true" ||\
       "$git_repo_exists" == "true" &&\
