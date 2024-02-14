@@ -648,7 +648,8 @@ done
 # Check to see if the new description is different from the old one
 if 
   [[ "$confirm_edited_description" == "true" ]] &&
-  [[ "$edited_description" != "$current_description" ]]
+  [[ "$edited_description" != "$current_description" ]] ||
+  [[ "$edited_description" != "No description, website, or topics provided." ]]
 then
   edited_description_differs="true"
 fi
