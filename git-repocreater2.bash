@@ -529,7 +529,7 @@ do
         printf "Is this correct? Yes/No: "
         read -r "confirm_edited_description"
         confirm_edited_description="$(printf "%s" "$confirm_edited_description" |\
-                                    tr '[:upper:]' '[:lower:]')"
+        tr '[:upper:]' '[:lower:]')"
         if [[ "$confirm_edited_description" == "yes" ||\
               "$confirm_edited_description" == "y" ]]
         then
@@ -551,10 +551,8 @@ done
 if [[ "$confirm_edited_description" == "true" && "$edited_description" != "$current_description" ]]; then
   edited_description_differs=true
 fi
-
 # Push the new description to GitHub if it's different from the default
 if [[ "$edited_description_differs" == "true" ]]; then
-  # Only edit if the description is not the default one
   if [[ "$edited_description" != "No description, website, or topics provided." ]]; then
     while [[ -z "$description_uploaded" ]]; do
       if gh repo edit "$git_username/$repo_name" --description "$edited_description"; then
@@ -562,6 +560,8 @@ if [[ "$edited_description_differs" == "true" ]]; then
         description_uploaded=true
       fi
     done
+  else
+    printf "Description remains the same.\n"
   fi
 fi
 # Forcefully push all local files to remote repository
