@@ -2,7 +2,8 @@
 #
 ## This is a script that automates GitHub operations, such as:
 ## logging in, staying logged in, creating working folders,
-## creating repositories, choosing and creating licensing,
+## creating repositories, creating and editing descriptions, 
+## choosing and creating licensing,
 #
 #
 #
@@ -314,7 +315,7 @@ do
         printf "$selected_letter" |\
           tr '[:lower:]' '[:upper:]')
       if 
-        [[ "$selected_letter" =~ "^[A-M]$" ]]
+        [[ "$selected_letter" =~ ^[A-M]$ ]]
       then
         selected_license_file="$(\
           printf "%s" "$license_names" |\
@@ -333,7 +334,7 @@ do
             [[ "$confirm_selected_license" == "y" ]]
           then
             selected_license_confirmed="true"
-            break 4
+            break 3
           elif [[ "$confirm_selected_license" == "no" ]] ||
                [[ "$confirm_selected_license" == "n" ]]
           then
@@ -658,8 +659,7 @@ if
   [[ "$edited_description_differs" == "true" ]]
 then
   if 
-    [[ -n "$edited_description" ]] &&
-    [[ "$edited_description" != "No description, website, or topics provided." ]]
+    [[ -n "$edited_description" ]]
   then
     while 
       [[ -z "$description_uploaded" ]]
