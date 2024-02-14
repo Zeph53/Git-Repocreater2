@@ -562,6 +562,7 @@ if [[ "$edited_description_differs" == "true" ]]; then
     done
   else
     printf "Description remains the same.\n"
+    description_unchanged=true
   fi
 fi
 # Forcefully push all local files to remote repository
