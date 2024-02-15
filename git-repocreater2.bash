@@ -602,8 +602,7 @@ fi
 
 # Confirm to edit the readme.md in repo with nano
 while 
-  [[ "$readme_file_exists_repo" == "true" ]] &&
-  [[ "$readme_edited" == "true" ]]
+  [[ "$readme_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
   read -r "confirm_edit_readme"
