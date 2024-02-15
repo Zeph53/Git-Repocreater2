@@ -114,7 +114,7 @@ fi
 #
 ## Generating a .netrc file with an access token in it. 
 #
-## Creating a repository
+## Creating a local repository
 # Generating a name for the new repository
 if 
   [[ -e "$1" ]]
@@ -468,7 +468,7 @@ then
     fi
   done
 fi
-# Confirm to edit the license.md in repo
+# Confirm to edit the license.md in repo with nano
 while 
   [[ "$lic_file_exists_repo" == "true" ]]
 do
@@ -502,8 +502,98 @@ then
     license_edited="true"
   done
 fi
+
+
+
+
 #
 ## Creating a README.MD file
+# Check for existing readme.md in repo
+if 
+  [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+then
+  printf "\"README.MD\" exists inside of \"$HOME/.github/$repo_name.git\".\n"
+  readme_file_exists_repo="true"
+fi
+# If not existing in repo, check to see if readme.md exists on GitHub
+#if 
+#  [[ -z "$readme_file_exists_repo" ]]
+#then
+#  readme_file_url="https://api.github.com/repos/$username/$repo_name/contents/README.MD"
+#  readme_file_exist_url="$(curl -s "$readme_file_url" |\
+#    awk -F '"' '/name/{found=1} END{print (found ? "1" : "0")}')"
+#  if 
+#    [[ "$readme_file_exist_url" == "1" ]]
+#  then
+#    printf "README.MD already exists on GitHub.\n"
+#    readme_file_exist_url="true"
+#  else
+#    printf "README.MD does not exist on GitHub.\n"
+#  fi
+#fi
+
+
+if
+  [[ -z "$readme_file_exists_repo" ]]
+then
+  readme_file_url="https://raw.githubusercontent.com/$username/$repo_name/master/README.MD"
+  if 
+    ! wget --spider "$readme_file_url" >& /dev/null
+  then
+    printf "\"README.MD\" does not exist on the GitHub repository.\n"
+  fi
+fi
+
+
+# If it exists on GitHub, download it into the local repository before editing
+if
+  [[ "$readme_file_exist_url" == "true" ]]
+then
+  readme_file_url="https://raw.githubusercontent.com/$username/$repo_name/master/README.MD"
+  wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
+fi
+
+
+# Confirm to edit the readme.md in repo with nano
+while 
+  [[ "$readme_file_exists_repo" == "true" ]] &&
+  [[ "$readme_edited" == "true" ]]
+do
+  printf "Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
+  read -r "confirm_edit_readme"
+  confirm_edit_readme="$(\
+    printf "$confirm_edit_readme" |\
+      tr '[:upper:]' '[:lower:]')"
+  if 
+    [[ "$confirm_edit_readme" == "yes" ]] ||
+    [[ "$confirm_edit_readme" == "y" ]]
+  then
+    edit_readme_confirmed="true"
+    break 1
+  elif 
+    [[ "$confirm_edit_readme" == "no" ]] ||
+    [[ "$confirm_edit_readme" == "n" ]]
+  then
+    edit_readme_confirmed="false"
+    break 1
+  fi
+done
+# Open readme.md in repo with nano after confirmation
+if 
+  [[ "$edit_readme_confirmed" == "true" ]]
+then
+  while 
+    [[ -z "$readme_edited" ]]
+  do
+    nano -q -E -I -i "$HOME/.github/$repo_name.git/README.MD"
+    readme_edited="true"
+  done
+fi
+
+
+
+
+
 #
 ## Creating the remote git repository on GitHub
 # Initialize a local git repository
