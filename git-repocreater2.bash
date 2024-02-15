@@ -558,24 +558,27 @@ if
   [[ -z "$readme_file_exists_repo" ]] &&
   [[ -z "$readme_file_exists_url" ]]
 then
-  printf "Would you like to create a new \"README.MD\" file in the local repository?\n"
-  read -r "confirm_create_readme"
-  confirm_create_readme="$(\
-    printf "$confirm_create_readme" |\
-      tr '[:upper:]' '[:lower:]')"
-  if 
-    [[ "$confirm_create_readme" == "yes" ]] ||
-    [[ "$confirm_create_readme" == "y" ]]
-  then
-    create_readme_confirmed="true"
-    break 1
-  elif 
-    [[ "$confirm_create_readme" == "no" ]] ||
-    [[ "$confirm_create_readme" == "n" ]]
-  then
-    create_readme_confirmed="false"
-    break 1
-  fi
+  while [[ -z "$create_readme_confirmed" ]]
+  do
+    printf "Would you like to create an empty \"README.MD\" file in the local repository? Yes/No: "
+    read -r "confirm_create_readme"
+    confirm_create_readme="$(\
+      printf "$confirm_create_readme" |\
+        tr '[:upper:]' '[:lower:]')"
+    if 
+      [[ "$confirm_create_readme" == "yes" ]] ||
+      [[ "$confirm_create_readme" == "y" ]]
+    then
+      create_readme_confirmed="true"
+      break 1
+    elif 
+      [[ "$confirm_create_readme" == "no" ]] ||
+      [[ "$confirm_create_readme" == "n" ]]
+    then
+      create_readme_confirmed="false"
+      break 1
+    fi
+  done
 fi
 
 # After confirmation, create a blank readme.md file with the repo name in it
