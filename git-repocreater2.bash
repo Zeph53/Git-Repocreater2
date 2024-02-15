@@ -688,20 +688,22 @@ then
   fi
 fi
 # Check if the content was indeed pushed to GitHub
-if 
-  [[ "$git_repo_pushed" == "true" ]]
-then
+if [[ "$git_repo_pushed" == "true" ]]; then
   printf "Checking if the content was pushed to GitHub.\n"
   previous_commit="$(\
     git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
     git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
   latest_commit="$(\
     git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
-  if 
-    [[ "$previous_commit" != "$latest_commit" ]]
-  then
+  
+  # Debugging output
+  echo "Previous commit hash: $previous_commit"
+  echo "Latest commit hash: $latest_commit"
+  
+  if [[ "$previous_commit" != "$latest_commit" ]]; then
     printf "\"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
   else
     printf "No new commits detected. \"$filename\" may not have been pushed.\n"
   fi
 fi
+
