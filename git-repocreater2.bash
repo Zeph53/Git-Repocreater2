@@ -27,6 +27,11 @@
 #
 #
 #
+
+
+
+
+#
 ## Launching parameters
 # Using --help option will show a help menu with directions then exit
 if 
@@ -71,6 +76,10 @@ then
   printf "Add a file or folder to the command as an argument.\n"
   exit 1
 fi
+
+
+
+
 #
 ## Logging into GitHub using GH
 # Check if user is logged in
@@ -113,6 +122,10 @@ else
 fi
 #
 ## Generating a .netrc file with an access token in it. 
+
+
+
+
 #
 ## Creating a local repository
 # Generating a name for the new repository
@@ -180,6 +193,10 @@ then
       /dev/null
   done
 fi
+
+
+
+
 #
 ## Creating a working directory
 # Check for existing repo with same name
@@ -237,6 +254,10 @@ else
   printf "\"$filename\" is the same as \"$HOME/.github/$repo_name.git/$filename\".\n"
   printf "Not copying file or directory added as argument.\n"
 fi
+
+
+
+
 #
 ## Choosing a license template, editing it, or making your own.
 # The license list as of 2024 February 08
@@ -289,7 +310,6 @@ then
     fi
   done
 else
-  # If LICENSE.MD doesn't exist, no need to prompt for selecting another license
   select_new_license_confirmed="true"
 fi
 # After confirmation, select a license template, display it, confirm if correct
@@ -507,9 +527,6 @@ fi
 
 
 git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
-
-
-
 #
 ## Creating a README.MD file
 # Check for existing readme.md in repo
@@ -581,7 +598,6 @@ then
     fi
   done
 fi
-
 # After confirmation, create a blank readme.md file with the repo name in it
 if
   [[ "$create_readme_confirmed" == "true" ]]
@@ -597,10 +613,6 @@ then
     fi
   done
 fi
-
-
-
-
 # Confirm to edit the readme.md in repo with nano
 while 
   [[ "$readme_file_exists_repo" == "true" ]]
@@ -729,6 +741,11 @@ then
     printf "GitHub repository creation failed at: \"$git_repo_url\"\n"
   fi
 fi
+
+
+
+
+#
 # Creating a description for your repository
 while 
   [[ -z "$confirm_edited_description" ]] ||
@@ -806,6 +823,10 @@ then
     done
   fi
 fi
+
+
+
+
 # Check to see what the current commit hash is
 if 
   [[ "$git_repo_created" == "true" ]] ||
