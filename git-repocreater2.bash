@@ -667,11 +667,22 @@ then
       if 
         gh repo edit "$git_username/$repo_name" --description "$edited_description"
       then
-        printf "Description successfully edited.\n"
+        printf "Description successfully updated.\n"
         description_uploaded="true"
       fi
     done
   fi
+fi
+# Check to see what the current commit hash is
+if 
+  [[ "$git_repo_created" == "true" ]] ||
+  [[ "$git_repo_exists" == "true" ]] &&
+  [[ "$confirm_edited_description" == "true" ]]
+then
+  printf "Checking GitHub for the latest commit hash.\n"
+  previous_commit="$(\
+    git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
+    git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
 fi
 # Forcefully push all local files to remote repository
 if 
@@ -687,23 +698,19 @@ then
     git_repo_pushed="true"
   fi
 fi
-# Check if the content was indeed pushed to GitHub
-if [[ "$git_repo_pushed" == "true" ]]; then
-  printf "Checking if the content was pushed to GitHub.\n"
-  previous_commit="$(\
-    git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
-    git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
+# Check to see what the latest commit hash is
+if 
+  [[ "$git_repo_pushed" == "true" ]]
+then
+  printf "Checking the latest commit hash.\n"
   latest_commit="$(\
     git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
-  
-  # Debugging output
-  echo "Previous commit hash: $previous_commit"
-  echo "Latest commit hash: $latest_commit"
-  
-  if [[ "$previous_commit" != "$latest_commit" ]]; then
-    printf "\"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
-  else
-    printf "No new commits detected. \"$filename\" may not have been pushed.\n"
-  fi
 fi
-
+# Comparing the old hash vs the new hash
+if 
+  [[ "$previous_commit" != "$latest_commit" ]]
+then
+  printf "\"$filename\" successfully pushed to GitHub at: \"$git_repo_url\"\n"
+else
+  printf "No new commits detected. \"$filename\" may not have been pushed.\n"
+fi
