@@ -506,6 +506,10 @@ fi
 
 
 
+
+
+
+
 #
 ## Creating a README.MD file
 # Check for existing readme.md in repo
@@ -514,44 +518,83 @@ if
 then
   printf "\"README.MD\" exists inside of \"$HOME/.github/$repo_name.git\".\n"
   readme_file_exists_repo="true"
+else
+  printf "\"README.MD\" does not exist inside of \"$HOME/.github/$repo_name.git\".\n"
 fi
 # If not existing in repo, check to see if readme.md exists on GitHub
-#if 
-#  [[ -z "$readme_file_exists_repo" ]]
-#then
-#  readme_file_url="https://api.github.com/repos/$username/$repo_name/contents/README.MD"
-#  readme_file_exist_url="$(curl -s "$readme_file_url" |\
-#    awk -F '"' '/name/{found=1} END{print (found ? "1" : "0")}')"
-#  if 
-#    [[ "$readme_file_exist_url" == "1" ]]
-#  then
-#    printf "README.MD already exists on GitHub.\n"
-#    readme_file_exist_url="true"
-#  else
-#    printf "README.MD does not exist on GitHub.\n"
-#  fi
-#fi
-
-
 if
   [[ -z "$readme_file_exists_repo" ]]
 then
   readme_file_url="https://raw.githubusercontent.com/$username/$repo_name/master/README.MD"
   if 
-    ! wget --spider "$readme_file_url" >& /dev/null
+    wget --spider "$readme_file_url" >& /dev/null
   then
+    printf "\"README.MD\" does exists on the GitHub repository.\n"
+    readme_file_exist_url=true
+  else
     printf "\"README.MD\" does not exist on the GitHub repository.\n"
   fi
 fi
-
-
-# If it exists on GitHub, download it into the local repository before editing
+# When the readme.md exists on GitHub and not in the local repository, download it
 if
-  [[ "$readme_file_exist_url" == "true" ]]
+  [[ "$readme_file_exist_url" == "true" ]] &&
+  [[ -z "$readme_file_exists_repo" ]]
 then
-  readme_file_url="https://raw.githubusercontent.com/$username/$repo_name/master/README.MD"
-  wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
+  printf "Downloading existing \"README.MD\" from \"$readme_file_url\".\n"
+  while 
+    [[ -z "$readme_file_url_wget" ]]
+  do
+    wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
+    if
+      [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+    then
+      printf "Existing \"README.MD\" downloaded from \"$readme_file_url\".\n"
+      readme_file_url_wget=true
+    fi
+  done
 fi
+# When the readme.md doesn't exist on the local repo or the GitHub repo ask to create one
+if
+  [[ -z "$readme_file_exists_repo" ]] &&
+  [[ -z "$readme_file_exists_url" ]]
+then
+  printf "Would you like to create a new \"README.MD\" file in the local repository?\n"
+  read -r "confirm_create_readme"
+  confirm_create_readme="$(\
+    printf "$confirm_create_readme" |\
+      tr '[:upper:]' '[:lower:]')"
+  if 
+    [[ "$confirm_create_readme" == "yes" ]] ||
+    [[ "$confirm_create_readme" == "y" ]]
+  then
+    create_readme_confirmed="true"
+    break 1
+  elif 
+    [[ "$confirm_create_readme" == "no" ]] ||
+    [[ "$confirm_create_readme" == "n" ]]
+  then
+    create_readme_confirmed="false"
+    break 1
+  fi
+fi
+
+# After confirmation, create a blank readme.md file with the repo name in it
+if
+  [[ "$create_readme_confirmed" == "true" ]]
+then
+  while [[ -z "$readme_file_exists_repo" ]]
+  do
+    touch "$HOME/.github/$repo_name.git/README.MD"
+    printf "# $repo_name\n" > "$HOME/.github/$repo_name.git/README.MD"
+    if [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+    then
+      printf "\"README.MD\" file successfully created.\n"
+      readme_file_exists_repo=true
+    fi
+  done
+fi
+
+
 
 
 # Confirm to edit the readme.md in repo with nano
