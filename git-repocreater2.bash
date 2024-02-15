@@ -533,7 +533,7 @@ git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
 if 
   [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
 then
-  printf "\"README.MD\" exists inside of \"$HOME/.github/$repo_name.git\".\n"
+  printf "\"README.MD\" exists inside at \"$HOME/.github/$repo_name.git/README.MD\".\n"
   readme_file_exists_repo="true"
 else
   printf "\"README.MD\" does not exist inside of \"$HOME/.github/$repo_name.git\".\n"
@@ -733,7 +733,8 @@ if
 then
   printf "Attempting to create a new repository on GitHub.\n"
   if 
-    gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public
+    gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public >&\
+      /dev/null
   then
     printf "GitHub repository successfully created at: \"$git_repo_url\"\n"
     git_repo_created="true"
@@ -814,7 +815,8 @@ then
       [[ -z "$description_uploaded" ]]
     do
       if 
-        gh repo edit "$git_username/$repo_name" --description "$edited_description"
+        gh repo edit "$git_username/$repo_name" --description "$edited_description" >&\
+          /dev/null
       then
         printf "Description successfully updated.\n"
         description_uploaded="true"
@@ -844,7 +846,8 @@ if
 then
   printf "Pushing changes to GitHub.\n"
   if
-    git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
+    git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master >&\
+      /dev/null
   then
     printf "Pushed \"$filename\" to \"$git_repo_url\".\n"
     git_repo_pushed="true"
