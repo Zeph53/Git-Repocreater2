@@ -768,7 +768,6 @@ do
       (( "${#edited_description}" >= "0" )) && 
       (( "${#edited_description}" <= "350" ))
     then
-      printf "Description saved.\n"
       printf "Description: \"$edited_description\"\n"
       while 
         true
