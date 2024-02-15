@@ -683,12 +683,11 @@ then
   previous_commit="$(\
     git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
     git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
+    before_commit_check=true
 fi
 # Forcefully push all local files to remote repository
 if 
-  [[ "$git_repo_created" == "true" ]] ||
-  [[ "$git_repo_exists" == "true" ]] &&
-  [[ "$confirm_edited_description" == "true" ]]
+  [[ "$before_commit_check" == "true" ]]
 then
   printf "Pushing changes to GitHub.\n"
   if
@@ -705,6 +704,7 @@ then
   printf "Checking GitHub for the latest commit hash.\n"
   latest_commit="$(\
     git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
+  after_commit_check=true
 fi
 # Comparing the old hash vs the new hash
 if 
