@@ -679,7 +679,7 @@ if
   [[ "$git_repo_exists" == "true" ]] &&
   [[ "$confirm_edited_description" == "true" ]]
 then
-  printf "Pushing changes to GitHub...\n"
+  printf "Pushing changes to GitHub.\n"
   if
     git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
   then
@@ -692,6 +692,9 @@ if
   [[ "$git_repo_pushed" == "true" ]]
 then
   printf "Checking if the content was pushed to GitHub.\n"
+  previous_commit="$(\
+    git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
+    git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
   latest_commit="$(\
     git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
   if 
