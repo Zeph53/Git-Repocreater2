@@ -527,7 +527,7 @@ if
 then
   readme_file_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/README.MD"
   if 
-    wget --spider "$readme_file_url" 
+    wget --spider "$readme_file_url" >& /dev/null
   then
     printf "\"README.MD\" does exists on the GitHub repository.\n"
     readme_file_exist_url=true
