@@ -694,7 +694,7 @@ then
   if
     git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master
   then
-    printf "Pushing \"$filename\" to \"$git_repo_url\".\n"
+    printf "Pushed \"$filename\" to \"$git_repo_url\".\n"
     git_repo_pushed="true"
   fi
 fi
@@ -702,7 +702,7 @@ fi
 if 
   [[ "$git_repo_pushed" == "true" ]]
 then
-  printf "Checking the latest commit hash.\n"
+  printf "Checking GitHub for the latest commit hash.\n"
   latest_commit="$(\
     git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
 fi
