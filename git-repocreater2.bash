@@ -506,7 +506,7 @@ fi
 
 
 
-
+git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
 
 
 
@@ -525,14 +525,14 @@ fi
 if
   [[ -z "$readme_file_exists_repo" ]]
 then
-  readme_file_url="https://raw.githubusercontent.com/$username/$repo_name/master/README.MD"
+  readme_file_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/README.MD"
   if 
-    wget --spider "$readme_file_url" >& /dev/null
+    wget --spider "$readme_file_url" 
   then
     printf "\"README.MD\" does exists on the GitHub repository.\n"
     readme_file_exist_url=true
   else
-    printf "\"README.MD\" does not exist on the GitHub repository.\n"
+    printf "\"README.MD\" does not exist at \"$readme_file_url\".\n"
   fi
 fi
 # When the readme.md exists on GitHub and not in the local repository, download it
@@ -556,7 +556,8 @@ fi
 # When the readme.md doesn't exist on the local repo or the GitHub repo ask to create one
 if
   [[ -z "$readme_file_exists_repo" ]] &&
-  [[ -z "$readme_file_exists_url" ]]
+  [[ -z "$readme_file_exists_url" ]] &&
+  [[ -z "$readme_file_url_wget" ]]
 then
   while [[ -z "$create_readme_confirmed" ]]
   do
@@ -701,9 +702,6 @@ fi
 if 
   [[ "$repo_git_commited_all" == "true" ]]
 then
-  git_username="$(\
-    cat ~/.config/gh/hosts.yml |\
-    awk '/user:/ {printf $NF}')"
   git_repo_url="https://github.com/$git_username/$repo_name"
   if 
     gh repo view "$git_username/$repo_name" --json name &>\
