@@ -748,8 +748,7 @@ then
 fi
 # Check to see if repository exists already on GitHub
 if
-  [[ "$repo_git_commited_all" == "true" ]] &&
-  [[ -z "$readme_file_exists_repo" ]]
+  [[ "$repo_git_commited_all" == "true" ]]
 then
   check_connection
 fi
