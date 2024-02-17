@@ -89,9 +89,9 @@ check_connection() {
       sleep 1
       : $((seconds--))
     done
-    printf "\n"  # Move to the next line after the countdown
+    printf "\n"
   done
-  printf "You are connected to the internet.\n"
+#  printf "You are connected to the internet.\n"
   connected_internet="true"
 }
 #
