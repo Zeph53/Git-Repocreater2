@@ -27,11 +27,6 @@
 #
 #
 #
-
-
-
-
-#
 ## Launching parameters
 # Using --help option will show a help menu with directions then exit
 if 
@@ -76,32 +71,32 @@ then
   printf "Add a file or folder to the command as an argument.\n"
   exit 1
 fi
-
-
-
-
-# Check to see if still connected to the internet, or at least to github.com
+#
+#
+#
+#
+## Check to see if still connected to the internet, or at least to github.com
 check_connection() {
-  while ! ping -c 1 www.github.com
+  while 
+    ! ping -c 1 www.github.com >& /dev/null
   do
     printf "Can't connect to \"www.GitHub.com\".\n"
     connected_internet="false"
-    secs=10
-    while [ $secs -gt 0 ]
+    seconds=10
+    while [ $seconds -gt 0 ]
     do
-      printf "\rTrying again in: %02d seconds." $secs
+      printf "\rTrying again in: %02d seconds." $seconds
       sleep 1
-      : $((secs--))
+      : $((seconds--))
     done
     printf "\n"  # Move to the next line after the countdown
   done
   printf "You are connected to the internet.\n"
   connected_internet="true"
 }
-
-
-
-
+#
+#
+#
 #
 ## Logging into GitHub using GH
 # Check if user is logged in
@@ -150,10 +145,9 @@ else
 fi
 #
 ## Generating a .netrc file with an access token in it. 
-
-
-
-
+#
+#
+#
 #
 ## Creating a local repository
 # Generating a name for the new repository
@@ -221,10 +215,9 @@ then
       /dev/null
   done
 fi
-
-
-
-
+#
+#
+#
 #
 ## Creating a working directory
 # Check for existing repo with same name
@@ -282,10 +275,9 @@ else
   printf "\"$filename\" is the same as \"$HOME/.github/$repo_name.git/$filename\".\n"
   printf "Not copying file or directory added as argument.\n"
 fi
-
-
-
-
+#
+#
+#
 #
 ## Choosing a license template, editing it, or making your own.
 # The license list as of 2024 February 08
@@ -556,14 +548,13 @@ then
     license_edited="true"
   done
 fi
-
-
-
-
-git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
+#
+#
+#
 #
 ## Creating a README.MD file
 # Check for existing readme.md in repo
+git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
 if 
   [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
 then
@@ -694,11 +685,9 @@ then
     readme_edited="true"
   done
 fi
-
-
-
-
-
+#
+#
+#
 #
 ## Creating the remote git repository on GitHub
 # Initialize a local git repository
@@ -803,10 +792,9 @@ then
     printf "GitHub repository creation failed at: \"$git_repo_url\"\n"
   fi
 fi
-
-
-
-
+#
+#
+#
 #
 # Creating a description for your repository
 if
@@ -898,10 +886,10 @@ then
     done
   fi
 fi
-
-
-
-
+#
+#
+#
+#
 # Check to see what the current commit hash is
 if
   [[ "$git_repo_created" == "true" ]] ||
