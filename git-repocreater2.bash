@@ -80,11 +80,13 @@ fi
 
 # Check to see if still connected to the internet, or at least to github.com
 check_connection() {
-  while ! ping -c 1 www.github.com >& /dev/null; do
+  while ! ping -c 1 www.github.com
+  do
     printf "Can't connect to \"www.GitHub.com\".\n"
     connected_internet="false"
     secs=10
-    while [ $secs -gt 0 ]; do
+    while [ $secs -gt 0 ]
+    do
       printf "\rTrying again in: %02d seconds." $secs
       sleep 1
       : $((secs--))
@@ -118,8 +120,8 @@ check_connection() {
 #
 ## Logging into GitHub using GH
 # Check if user is logged in
-check_connection
 if
+  check_connection
   [[ "$connected_internet" == "true" ]] && 
   ! gh auth status &>\
       /dev/null
@@ -448,6 +450,8 @@ then
     printf "Selected license does not exist at \"$license_file_path\". Downloading it.\n"
     lic_file_exists_dir="false"
     while 
+      check_connection
+      [[ "$connected_internet" == "true" ]] && 
       ! [[ -f "$license_file_path" ]]
     do
       wget --quiet "$license_file_url" -O "$license_file_path"
@@ -583,6 +587,8 @@ if
 then
   readme_file_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/README.MD"
   if 
+    check_connection
+    [[ "$connected_internet" == "true" ]] && 
     wget --spider "$readme_file_url" >& /dev/null
   then
     printf "\"README.MD\" does exists on the GitHub repository.\n"
@@ -600,6 +606,8 @@ then
   while 
     [[ -z "$readme_file_url_wget" ]]
   do
+    check_connection
+    [[ "$connected_internet" == "true" ]] && 
     wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
     if
       [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
@@ -755,6 +763,8 @@ if
 then
   git_repo_url="https://github.com/$git_username/$repo_name"
   if 
+    check_connection
+    [[ "$connected_internet" == "true" ]] && 
     gh repo view "$git_username/$repo_name" --json name &>\
       /dev/null
   then
@@ -772,6 +782,8 @@ if
 then
   printf "Attempting to create a new repository on GitHub.\n"
   if 
+    check_connection
+    [[ "$connected_internet" == "true" ]] && 
     gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public >&\
       /dev/null
   then
@@ -795,6 +807,7 @@ do
      [[ "$git_repo_exists" == "true" ]]
   then
     current_description="$(\
+      check_connection &&\
       gh repo view "$git_username/$repo_name" --json "description" |\
         awk -F '"' '{print $4}')"
     printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
@@ -854,6 +867,8 @@ then
       [[ -z "$description_uploaded" ]]
     do
       if 
+        check_connection
+        [[ "$connected_internet" == "true" ]] && 
         gh repo edit "$git_username/$repo_name" --description "$edited_description" >&\
           /dev/null
       then
@@ -875,6 +890,7 @@ if
 then
   printf "Checking GitHub for the latest commit hash.\n"
   previous_commit="$(\
+    check_connection &&\
     git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
     git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
     before_commit_check=true
@@ -885,6 +901,8 @@ if
 then
   printf "Pushing changes to GitHub.\n"
   if
+    check_connection
+    [[ "$connected_internet" == "true" ]] && 
     git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master >&\
       /dev/null
   then
@@ -898,6 +916,7 @@ if
 then
   printf "Checking GitHub for the latest commit hash.\n"
   latest_commit="$(\
+    check_connection &&\
     git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
   after_commit_check=true
 fi
