@@ -78,6 +78,8 @@ then
 fi
 
 
+
+
 # Check to see if still connected to the internet, or at least to github.com
 check_connection() {
   while ! ping -c 1 www.github.com
@@ -100,29 +102,16 @@ check_connection() {
 
 
 
-#while 
-#  [[ -z "$connected_internet" || "$connected_internet" == "false" ]]
-#do
-#  printf "Checking connection with \"www.GitHub.com\".\n"
-#  if
-#    ping -c 1 www.github.com >& /dev/null
-#  then
-#    printf "Connection to \"www.GitHub.com\" successful.\n"
-#    connected_internet="true"
-#  else
-#    printf "You are not connected to the internet.\n"
-#    connected_internet="false"
-#    printf "Checking again in 10.\n"
-#    fi
-#  fi
-#done
-
 #
 ## Logging into GitHub using GH
 # Check if user is logged in
 if
+  [[ "$1" == "true" ]]
+then
   check_connection
-  [[ "$connected_internet" == "true" ]] && 
+fi
+if
+  [[ "$connected_internet" == "true" ]] &&
   ! gh auth status &>\
       /dev/null
 then
@@ -353,8 +342,6 @@ else
 fi
 # After confirmation, select a license template, display it, confirm if correct
 while 
-  check_connection
-  [[ "$connected_internet" == "true" ]] &&
   [[ "$select_new_license_confirmed" == "true" ]] ||
   [[ "$selected_license_confirmed" == "false" ]]
 do
@@ -429,7 +416,13 @@ then
   esac
 fi
 # Check if license file exists, if not, downloads it. 
+if
+  [[ "$selected_license_confirmed" == "true" ]]
+then
+  check_connection
+fi
 if 
+  [[ "$connected_internet" == "true" ]] &&
   [[ -n "$license_file_url" ]] ||
   [[ "$select_new_license_confirmed" == "true" ]]
 then
@@ -450,8 +443,6 @@ then
     printf "Selected license does not exist at \"$license_file_path\". Downloading it.\n"
     lic_file_exists_dir="false"
     while 
-      check_connection
-      [[ "$connected_internet" == "true" ]] && 
       ! [[ -f "$license_file_path" ]]
     do
       wget --quiet "$license_file_url" -O "$license_file_path"
@@ -540,7 +531,7 @@ do
   confirm_edit_license="$(\
     printf "$confirm_edit_license" |\
       tr '[:upper:]' '[:lower:]')"
-  if 
+  if
     [[ "$confirm_edit_license" == "yes" ]] ||
     [[ "$confirm_edit_license" == "y" ]]
   then
@@ -585,10 +576,14 @@ fi
 if
   [[ -z "$readme_file_exists_repo" ]]
 then
+  check_connection
+fi
+if
+  [[ "$connected_internet" == "true" ]] &&
+  [[ -z "$readme_file_exists_repo" ]]
+then
   readme_file_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/README.MD"
   if 
-    check_connection
-    [[ "$connected_internet" == "true" ]] && 
     wget --spider "$readme_file_url" >& /dev/null
   then
     printf "\"README.MD\" does exists on the GitHub repository.\n"
@@ -602,12 +597,17 @@ if
   [[ "$readme_file_exist_url" == "true" ]] &&
   [[ -z "$readme_file_exists_repo" ]]
 then
+  check_connection
+fi
+if
+  [[ "$connected_internet" == "true" ]] &&
+  [[ "$readme_file_exist_url" == "true" ]] &&
+  [[ -z "$readme_file_exists_repo" ]]
+then
   printf "Downloading existing \"README.MD\" from \"$readme_file_url\".\n"
   while 
     [[ -z "$readme_file_url_wget" ]]
   do
-    check_connection
-    [[ "$connected_internet" == "true" ]] && 
     wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
     if
       [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
@@ -758,13 +758,18 @@ then
   repo_git_commited_all="true"
 fi
 # Check to see if repository exists already on GitHub
+if
+  [[ "$repo_git_commited_all" == "true" ]] &&
+  [[ -z "$readme_file_exists_repo" ]]
+then
+  check_connection
+fi
 if 
+  [[ "$connected_internet" == "true" ]] &&
   [[ "$repo_git_commited_all" == "true" ]]
 then
   git_repo_url="https://github.com/$git_username/$repo_name"
   if 
-    check_connection
-    [[ "$connected_internet" == "true" ]] && 
     gh repo view "$git_username/$repo_name" --json name &>\
       /dev/null
   then
@@ -776,14 +781,19 @@ then
   fi
 fi
 # Create a remote repository
+if
+  [[ "$repo_git_commited_all" == "true" ]] &&
+  [[ "$git_repo_exists" == "false" ]]
+then
+  check_connection
+fi
 if 
+  [[ "$connected_internet" == "true" ]] &&
   [[ "$repo_git_commited_all" == "true" ]] &&
   [[ "$git_repo_exists" == "false" ]]
 then
   printf "Attempting to create a new repository on GitHub.\n"
   if 
-    check_connection
-    [[ "$connected_internet" == "true" ]] && 
     gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public >&\
       /dev/null
   then
@@ -799,7 +809,14 @@ fi
 
 #
 # Creating a description for your repository
+if
+  [[ -z "$confirm_edited_description" ]] ||
+  [[ "$confirm_edited_description" != "true" ]]
+then
+  check_connection
+fi
 while 
+  [[ "$connected_internet" == "true" ]] &&
   [[ -z "$confirm_edited_description" ]] ||
   [[ "$confirm_edited_description" != "true" ]]
 do
@@ -807,7 +824,6 @@ do
      [[ "$git_repo_exists" == "true" ]]
   then
     current_description="$(\
-      check_connection &&\
       gh repo view "$git_username/$repo_name" --json "description" |\
         awk -F '"' '{print $4}')"
     printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
@@ -857,7 +873,13 @@ then
   edited_description_differs="true"
 fi
 # Push the new description to GitHub if it's different from the default
-if 
+if
+  [[ "$edited_description_differs" == "true" ]]
+then
+  check_connection
+fi
+if
+  [[ "$connected_internet" == "true" ]] &&
   [[ "$edited_description_differs" == "true" ]]
 then
   if 
@@ -867,8 +889,6 @@ then
       [[ -z "$description_uploaded" ]]
     do
       if 
-        check_connection
-        [[ "$connected_internet" == "true" ]] && 
         gh repo edit "$git_username/$repo_name" --description "$edited_description" >&\
           /dev/null
       then
@@ -883,26 +903,37 @@ fi
 
 
 # Check to see what the current commit hash is
-if 
+if
+  [[ "$git_repo_created" == "true" ]] ||
+  [[ "$git_repo_exists" == "true" ]] &&
+  [[ "$confirm_edited_description" == "true" ]]
+then
+  check_connection
+fi
+if
+  [[ "$connected_internet" == "true" ]] &&
   [[ "$git_repo_created" == "true" ]] ||
   [[ "$git_repo_exists" == "true" ]] &&
   [[ "$confirm_edited_description" == "true" ]]
 then
   printf "Checking GitHub for the latest commit hash.\n"
   previous_commit="$(\
-    check_connection &&\
     git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
     git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
     before_commit_check=true
 fi
 # Forcefully push all local files to remote repository
-if 
+if
+  [[ "$before_commit_check" == "true" ]]
+then
+  check_connection
+fi
+if
+  [[ "$connected_internet" == "true" ]] &&
   [[ "$before_commit_check" == "true" ]]
 then
   printf "Pushing changes to GitHub.\n"
   if
-    check_connection
-    [[ "$connected_internet" == "true" ]] && 
     git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master >&\
       /dev/null
   then
@@ -911,12 +942,17 @@ then
   fi
 fi
 # Check to see what the latest commit hash is
-if 
+if
+  [[ "$git_repo_pushed" == "true" ]]
+then
+  check_connection
+fi
+if
+  [[ "$connected_internet" == "true" ]] &&
   [[ "$git_repo_pushed" == "true" ]]
 then
   printf "Checking GitHub for the latest commit hash.\n"
   latest_commit="$(\
-    check_connection &&\
     git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
   after_commit_check=true
 fi
