@@ -78,12 +78,49 @@ then
 fi
 
 
+# Check to see if still connected to the internet, or at least to github.com
+check_connection() {
+  while ! ping -c 1 www.github.com >& /dev/null; do
+    printf "Can't connect to \"www.GitHub.com\".\n"
+    connected_internet="false"
+    secs=10
+    while [ $secs -gt 0 ]; do
+      printf "\rTrying again in: %02d seconds." $secs
+      sleep 1
+      : $((secs--))
+    done
+    printf "\n"  # Move to the next line after the countdown
+  done
+  printf "You are connected to the internet.\n"
+  connected_internet="true"
+}
 
+
+
+
+#while 
+#  [[ -z "$connected_internet" || "$connected_internet" == "false" ]]
+#do
+#  printf "Checking connection with \"www.GitHub.com\".\n"
+#  if
+#    ping -c 1 www.github.com >& /dev/null
+#  then
+#    printf "Connection to \"www.GitHub.com\" successful.\n"
+#    connected_internet="true"
+#  else
+#    printf "You are not connected to the internet.\n"
+#    connected_internet="false"
+#    printf "Checking again in 10.\n"
+#    fi
+#  fi
+#done
 
 #
 ## Logging into GitHub using GH
 # Check if user is logged in
-if 
+check_connection
+if
+  [[ "$connected_internet" == "true" ]] && 
   ! gh auth status &>\
       /dev/null
 then
@@ -314,6 +351,8 @@ else
 fi
 # After confirmation, select a license template, display it, confirm if correct
 while 
+  check_connection
+  [[ "$connected_internet" == "true" ]] &&
   [[ "$select_new_license_confirmed" == "true" ]] ||
   [[ "$selected_license_confirmed" == "false" ]]
 do
