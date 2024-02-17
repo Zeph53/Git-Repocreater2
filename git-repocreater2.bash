@@ -78,7 +78,7 @@ fi
 ## Check to see if still connected to the internet, or at least to github.com
 check_connection() {
   while 
-    ! ping -c 1 www.github.com >& /dev/null
+    ! ping -c 1 www.github.com
   do
     printf "Can't connect to \"www.GitHub.com\".\n"
     connected_internet="false"
