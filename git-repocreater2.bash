@@ -101,7 +101,7 @@ check_connection() {
 ## Logging into GitHub using GH
 # Check if user is logged in
 if
-  [[ "$1" == "true" ]]
+  [[ -z "$connected_internet" ]]
 then
   check_connection
 fi
