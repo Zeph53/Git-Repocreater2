@@ -144,6 +144,9 @@ else
   printf "You are already authenticated with GitHub.\n"
 fi
 #
+#
+#
+#
 ## Generating a .netrc file with an access token in it. 
 #
 #
@@ -197,7 +200,7 @@ then
         printf "The chosen name for the new repository is: \"$repo_name\".\n"
       fi
       printf "Is this correct? Yes/No: "
-      read -r "confirm_repo_name"
+      read -r -e "confirm_repo_name"
       if 
         [[ "$confirm_repo_name" == "yes" ]] ||
         [[ "$confirm_repo_name" == "y" ]]
@@ -313,7 +316,7 @@ then
     true
   do
     printf "Do you want to select/download another license file? Yes/No: "
-    read -r "select_new_license"
+    read -r -e "select_new_license"
     select_new_license="$(\
       printf "%s" "$select_new_license" |\
         tr '[:upper:]' '[:lower:]')"
@@ -350,7 +353,7 @@ do
       true
     do
       printf "Enter the letter for the license template you want to use: "
-      read -r "selected_letter"
+      read -r -e "selected_letter"
       selected_letter=$(\
         printf "$selected_letter" |\
           tr '[:lower:]' '[:upper:]')
@@ -365,7 +368,7 @@ do
           true
         do
           printf "Is this correct? Yes/No: "
-          read -r "confirm_selected_license"
+          read -r -e "confirm_selected_license"
           confirm_selected_license="$(\
             printf "$confirm_selected_license" |\
               tr '[:upper:]' '[:lower:]')"
@@ -470,7 +473,7 @@ while
   [[ "$license_file_differs" == "true" ]]
 do
   printf "Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
-  read -r "confirm_copy_license"
+  read -r -e "confirm_copy_license"
   confirm_copy_license="$(\
     printf "$confirm_copy_license" |\
       tr '[:upper:]' '[:lower:]')"
@@ -519,7 +522,7 @@ while
   [[ "$lic_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
-  read -r "confirm_edit_license"
+  read -r -e "confirm_edit_license"
   confirm_edit_license="$(\
     printf "$confirm_edit_license" |\
       tr '[:upper:]' '[:lower:]')"
@@ -617,7 +620,7 @@ then
   while [[ -z "$create_readme_confirmed" ]]
   do
     printf "Would you like to create an empty \"README.MD\" file in the local repository? Yes/No: "
-    read -r "confirm_create_readme"
+    read -r -e "confirm_create_readme"
     confirm_create_readme="$(\
       printf "$confirm_create_readme" |\
         tr '[:upper:]' '[:lower:]')"
@@ -656,7 +659,7 @@ while
   [[ "$readme_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
-  read -r "confirm_edit_readme"
+  read -r -e "confirm_edit_readme"
   confirm_edit_readme="$(\
     printf "$confirm_edit_readme" |\
       tr '[:upper:]' '[:lower:]')"
@@ -734,6 +737,51 @@ then
     fi
   done
 fi
+
+
+
+
+# Request the user to create a custom Git commit message
+commit_message_template="$(git config --global --get-all commit.template)"
+if
+  [[ -f "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG" ]]
+then
+  existing_commit_message="$(head -n 1 "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG")"
+  default_commit_message="$existing_commit_message"
+elif
+  [[ -n "$commit_message_template" ]]
+then
+  default_commit_message="$commit_message_template"
+else
+  default_commit_message="Initial commit"
+fi
+while
+  [[ -z "$commit_message_commited" ]]
+do
+  if
+    [[ -z "$commit_message" ]] || 
+    [[ -n "$commit_message" ]]
+  then
+    printf "Edit the commit message. 50 characters max.\n"
+    if
+      [[ -n "$commit_message" ]]
+    then
+      default_commit_message="$commit_message"
+    fi
+    read -r -e -i "$default_commit_message" "commit_message"
+    if
+      (( "${#commit_message}" >= "1" )) &&
+      (( "${#commit_message}" <= "50" ))
+    then
+      commit_message_commited="true"
+    else
+      printf "Commit message must be between 1 and 50 characters.\n"
+    fi
+  fi
+done
+   
+        
+
 # Index files from staging to be ready for commit to GitHub
 if 
   [[ "$repo_git_added_all" == "true" ]]
@@ -742,7 +790,7 @@ then
     ! git -C "$HOME/.github/$repo_name.git" commit -m "commit" |\
         grep "changed"
   then
-    printf "There was nothing to commit that wasn't already commited.\n"
+    printf "There was nothing to commit that wasn't already committed.\n"
   fi
   repo_git_commited_all="true"
 fi
@@ -829,7 +877,7 @@ do
         true
       do
         printf "Is this correct? Yes/No: "
-        read -r "confirm_edited_description"
+        read -r -e "confirm_edited_description"
         confirm_edited_description="$(\
           printf "%s" "$confirm_edited_description" |\
             tr '[:upper:]' '[:lower:]')"
