@@ -787,7 +787,7 @@ if
   [[ "$repo_git_added_all" == "true" ]]
 then
   if 
-    ! git -C "$HOME/.github/$repo_name.git" commit -m "commit" |\
+    ! git -C "$HOME/.github/$repo_name.git" commit -m "$commit_message" |\
         grep "changed"
   then
     printf "There was nothing to commit that wasn't already committed.\n"
