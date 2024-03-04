@@ -49,7 +49,7 @@ Options:
 
 
 
-Git-Repocreater2.bash
+Git-Repocreater2
 Copyright (C) 2024 GitHub.com/Zeph53
 This program comes with ABSOLUTELY NO WARRANTY!
 This is free software, and you are welcome to
@@ -61,6 +61,7 @@ elif
   [[ ! -e "$1" ]]
 then
   printf "Add a file or folder to the command as an argument.\n"
+  printf "Use \"--help\" for help.\n"
   exit 1
 fi
 #
@@ -97,7 +98,7 @@ printf \
 #
 #
 ## Logging into GitHub using GH
-# Check if user is logged in
+# Check if user is logged in, or log in
 if
   [[ -z "$connected_internet" ]]
 then
@@ -112,23 +113,23 @@ then
   while 
     true
   do
-    # Prompt user for Personal Access Token until provided
     read -r -e -p "GitHub Personal Access Token: " "gh_pat"
-    # Check if token is empty
     if 
       [[ -z "$gh_pat" ]]
     then
       printf "Token cannot be empty.\n"
+      unset "gh_pat"
     else
-      # Attempt to login using token variable
       if 
         ! printf "$gh_pat" |\
             gh auth login --with-token &>\
               /dev/null
       then
         printf "Failed to authenticate with GitHub. Please try again.\n"
+        unset "gh_pat"
       else
         printf "Successfully authenticated with GitHub.\n"
+        unset "gh_pat"
         gh config set git_protocol https &>\
           /dev/null
         gh auth setup-git &>\
@@ -138,7 +139,6 @@ then
     fi
   done
 else
-  # Tell the user they are already logged in
   printf "You are already authenticated with GitHub.\n"
 fi
 ## Generating a .netrc file with an access token in it. 
@@ -154,14 +154,12 @@ then
   while 
     true
   do
-    # Create temp file and generate repo name out of file or directory name
     repo_name_temp="$(\
       mktemp)"
     printf "$1" |\
       awk -F '/' '{printf$NF}' >\
         "$repo_name_temp"
     repo_name_empty_msg_shown="false"
-    # Prompt the user to alter the repo name of the file/dir in the command argument
     if 
       ! "$repo_name_empty_msg_shown"
     then
@@ -170,15 +168,12 @@ then
     while 
       true
     do
-      # Use temp file as prompt to read user's modification
       read -r -e -i "$(\
         cat "$repo_name_temp")" "repo_name"
       if 
         [[ -z "$repo_name" ]]
       then
-        # Prevent user from using an empty repo name
         printf "Repository name cannot be empty.\n"
-        # Flag to prevent loop from displaying same message
         repo_name_empty_msg_shown="true"
       else
         break 1
@@ -301,6 +296,49 @@ else
   printf "\"LICENSE.MD\" file does not exist inside of the repository directory.\n"
   lic_file_exists_repo="false"
 fi
+# If not existing in repo, check to see if license.md happens to exists on GitHub already
+git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
+if
+  [[ "$lic_file_exists_repo" == "false" ]]
+then
+  lic_file_github_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/LICENSE.MD"
+  if 
+    check_connection
+  then
+    if
+      wget --spider "$lic_file_github_url" \
+        >& /dev/null
+    then
+      printf "\"LICENSE.MD\" does exists on the GitHub repository.\n"
+      lic_file_exist_github_url="true"
+    else
+      printf "\"LICENSE.MD\" does not exist at \"$lic_file_github_url\".\n"
+    fi
+  fi
+fi
+# When the license.md exists on GitHub and not in the local repository, download it
+if
+  [[ "$lic_file_exist_github_url" == "true" ]] &&
+  [[ "$lic_file_exists_repo" == "false" ]]
+then
+  printf "Downloading \"LICENSE.MD\" from \"$lic_file_github_url\".\n"
+  while 
+    [[ -z "$lic_file_github_url_wget" ]]
+  do
+    if
+      check_connection
+    then
+      wget --quiet "$lic_file_github_url" -O "$HOME/.github/$repo_name.git/LICENSE.MD"
+      if
+        [[ -f "$HOME/.github/$repo_name.git/LICENSE.MD" ]]
+      then
+        printf "\"LICENSE.MD\" downloaded from \"$lic_file_github_url\".\n"
+        lic_file_exists_repo="true"
+        lic_file_github_url_wget="true"
+      fi
+    fi
+  done
+fi
 # Confirm if wanting to download a new license file
 if 
   [[ "$lic_file_exists_repo" == "true" ]]
@@ -328,7 +366,7 @@ then
 else
   select_new_license_confirmed="true"
 fi
-# After confirmation, select a license template, display it, confirm if correct
+# After confirmation unless existing, select a license template, display it, confirm if correct
 while 
   [[ "$select_new_license_confirmed" == "true" ]] ||
   [[ "$selected_license_confirmed" == "false" ]]
@@ -484,7 +522,7 @@ do
   fi
 done
 # Copy downloaded license file from license dir to repo dir after confirmation
-if 
+if
   [[ "$lic_file_exists_dir" == "true" ]] &&
   [[ "$copy_license_confirmed" == "true" ]] ||
   [[ "$lic_file_exists_repo" == "false" ]]
@@ -549,7 +587,6 @@ fi
 #
 ## Creating a README.MD file
 # Check for existing readme.md in repo
-git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
 if 
   [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
 then
@@ -571,7 +608,7 @@ then
         >& /dev/null
     then
       printf "\"README.MD\" does exists on the GitHub repository.\n"
-      readme_file_exist_url=true
+      readme_file_exist_url="true"
     else
       printf "\"README.MD\" does not exist at \"$readme_file_url\".\n"
     fi
@@ -594,7 +631,7 @@ then
         [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
       then
         printf "Existing \"README.MD\" downloaded from \"$readme_file_url\".\n"
-        readme_file_url_wget=true
+        readme_file_url_wget="true"
       fi
     fi
   done
@@ -638,7 +675,7 @@ then
     if [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
     then
       printf "\"README.MD\" file successfully created.\n"
-      readme_file_exists_repo=true
+      readme_file_exists_repo="true"
     fi
   done
 fi
@@ -928,7 +965,7 @@ then
     previous_commit="$(\
       git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
         git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
-      before_commit_check=true
+    before_commit_check="true"
   fi
 fi
 # Forcefully push all local files to remote repository
@@ -958,7 +995,7 @@ then
   then
     latest_commit="$(\
       git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
-    after_commit_check=true
+    after_commit_check="true"
   fi
 fi
 # Comparing the old hash vs the new hash
