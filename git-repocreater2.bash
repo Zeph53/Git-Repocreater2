@@ -8,7 +8,7 @@
 #
 #
 #
-#    Git-Repocreater2.bash to instantly create repositories on GitHub.
+#    Git-Repocreater2 to instantly create repositories on GitHub.
 #    Copyright (C) 2024 GitHub.com/Zeph53
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -63,16 +63,18 @@ then
   printf "Add a file or folder to the command as an argument.\n"
   exit 1
 fi
-## Function to check to see if still connected to the internet, or at least to github.com
+#
+## Function to check to see if still connected to the internet,
+## or at least to github.com
 check_connection() {
   printf "Testing \"www.GitHub.com\" connection.\n"
   while 
-    ! ping -W 0.5 -c 3 www.github.com \
+    ! ping -i 0.25 -W 2 -c 4 "www.github.com" \
       >& /dev/null
   do
     printf "Can't connect to \"www.GitHub.com\".\n"
     connected_internet="false"
-    seconds=10
+    seconds=5
     while [ $seconds -gt 0 ]
     do
       printf "\rTrying again in: %02d seconds." $seconds
@@ -84,6 +86,12 @@ check_connection() {
   printf "Connected to \"www.GitHub.com\".\n"
   connected_internet="true"
 }
+#
+## GNU General Public License v3.0 (gpl-3.0) prompt
+printf \
+"This program comes with ABSOLUTELY NO WARRANTY!\n"
+printf \
+"This is free software, and you are welcome to redistribute it under certain conditions.\n"
 #
 #
 #
@@ -152,7 +160,6 @@ then
     printf "$1" |\
       awk -F '/' '{printf$NF}' >\
         "$repo_name_temp"
-    # Flag to tell the script not to prompt user when empty name
     repo_name_empty_msg_shown="false"
     # Prompt the user to alter the repo name of the file/dir in the command argument
     if 
@@ -600,7 +607,7 @@ if
 then
   while [[ -z "$create_readme_confirmed" ]]
   do
-    printf "Would you like to create an empty \"README.MD\" file in the local repository? Yes/No: "
+    printf "Create an empty \"README.MD\" file in the local repository? Yes/No: "
     read -r "confirm_create_readme"
     confirm_create_readme="$(\
       printf "$confirm_create_readme" |\
@@ -920,7 +927,7 @@ then
   then
     previous_commit="$(\
       git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
-      git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
+        git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
       before_commit_check=true
   fi
 fi
