@@ -57,28 +57,17 @@ redistribute it under certain conditions.
 See \"https://www.gnu.org/licenses/gpl-3.0.txt\"
 "
   exit 1
-elif 
-  [[ "$1" == "--shit" ]] ||
-  [[ "$1" == "-s" ]]
-then
-  printf "Usage:
-shit
-"
-  exit 1
 elif
   [[ ! -e "$1" ]]
 then
   printf "Add a file or folder to the command as an argument.\n"
   exit 1
 fi
-#
-#
-#
-#
-## Check to see if still connected to the internet, or at least to github.com
+## Function to check to see if still connected to the internet, or at least to github.com
 check_connection() {
+  printf "Testing \"www.GitHub.com\" connection.\n"
   while 
-    ! ping -c 1 www.github.com >& /dev/null
+    ! ping -W 1 -c 3 www.github.com >& /dev/null
   do
     printf "Can't connect to \"www.GitHub.com\".\n"
     connected_internet="false"
@@ -91,7 +80,7 @@ check_connection() {
     done
     printf "\n"
   done
-#  printf "You are connected to the internet.\n"
+  printf "Connected to \"www.GitHub.com\".\n"
   connected_internet="true"
 }
 #
@@ -143,10 +132,6 @@ else
   # Tell the user they are already logged in
   printf "You are already authenticated with GitHub.\n"
 fi
-#
-#
-#
-#
 ## Generating a .netrc file with an access token in it. 
 #
 #
@@ -200,7 +185,7 @@ then
         printf "The chosen name for the new repository is: \"$repo_name\".\n"
       fi
       printf "Is this correct? Yes/No: "
-      read -r -e "confirm_repo_name"
+      read -r "confirm_repo_name"
       if 
         [[ "$confirm_repo_name" == "yes" ]] ||
         [[ "$confirm_repo_name" == "y" ]]
@@ -316,7 +301,7 @@ then
     true
   do
     printf "Do you want to select/download another license file? Yes/No: "
-    read -r -e "select_new_license"
+    read -r "select_new_license"
     select_new_license="$(\
       printf "%s" "$select_new_license" |\
         tr '[:upper:]' '[:lower:]')"
@@ -353,7 +338,7 @@ do
       true
     do
       printf "Enter the letter for the license template you want to use: "
-      read -r -e "selected_letter"
+      read -r "selected_letter"
       selected_letter=$(\
         printf "$selected_letter" |\
           tr '[:lower:]' '[:upper:]')
@@ -368,7 +353,7 @@ do
           true
         do
           printf "Is this correct? Yes/No: "
-          read -r -e "confirm_selected_license"
+          read -r "confirm_selected_license"
           confirm_selected_license="$(\
             printf "$confirm_selected_license" |\
               tr '[:upper:]' '[:lower:]')"
@@ -412,12 +397,6 @@ then
 fi
 # Check if license file exists, if not, downloads it. 
 if
-  [[ "$selected_license_confirmed" == "true" ]]
-then
-  check_connection
-fi
-if 
-  [[ "$connected_internet" == "true" ]] &&
   [[ -n "$license_file_url" ]] ||
   [[ "$select_new_license_confirmed" == "true" ]]
 then
@@ -440,7 +419,12 @@ then
     while 
       ! [[ -f "$license_file_path" ]]
     do
-      wget --quiet "$license_file_url" -O "$license_file_path"
+      if
+        check_connection
+      then
+        printf "Downloading.\n"
+        wget --quiet "$license_file_url" -O "$license_file_path"
+      fi
       if 
         [[ -f "$license_file_path" ]]
       then
@@ -473,7 +457,7 @@ while
   [[ "$license_file_differs" == "true" ]]
 do
   printf "Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
-  read -r -e "confirm_copy_license"
+  read -r "confirm_copy_license"
   confirm_copy_license="$(\
     printf "$confirm_copy_license" |\
       tr '[:upper:]' '[:lower:]')"
@@ -522,7 +506,7 @@ while
   [[ "$lic_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
-  read -r -e "confirm_edit_license"
+  read -r "confirm_edit_license"
   confirm_edit_license="$(\
     printf "$confirm_edit_license" |\
       tr '[:upper:]' '[:lower:]')"
@@ -561,7 +545,7 @@ git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
 if 
   [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
 then
-  printf "\"README.MD\" exists inside at \"$HOME/.github/$repo_name.git/README.MD\".\n"
+  printf "\"README.MD\" exists inside of \"$HOME/.github/$repo_name.git/README.MD\".\n"
   readme_file_exists_repo="true"
 else
   printf "\"README.MD\" does not exist inside of \"$HOME/.github/$repo_name.git\".\n"
@@ -570,20 +554,18 @@ fi
 if
   [[ -z "$readme_file_exists_repo" ]]
 then
-  check_connection
-fi
-if
-  [[ "$connected_internet" == "true" ]] &&
-  [[ -z "$readme_file_exists_repo" ]]
-then
   readme_file_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/README.MD"
   if 
-    wget --spider "$readme_file_url" >& /dev/null
+    check_connection
   then
-    printf "\"README.MD\" does exists on the GitHub repository.\n"
-    readme_file_exist_url=true
-  else
-    printf "\"README.MD\" does not exist at \"$readme_file_url\".\n"
+    if
+      wget --spider "$readme_file_url" >& /dev/null
+    then
+      printf "\"README.MD\" does exists on the GitHub repository.\n"
+      readme_file_exist_url=true
+    else
+      printf "\"README.MD\" does not exist at \"$readme_file_url\".\n"
+    fi
   fi
 fi
 # When the readme.md exists on GitHub and not in the local repository, download it
@@ -591,23 +573,20 @@ if
   [[ "$readme_file_exist_url" == "true" ]] &&
   [[ -z "$readme_file_exists_repo" ]]
 then
-  check_connection
-fi
-if
-  [[ "$connected_internet" == "true" ]] &&
-  [[ "$readme_file_exist_url" == "true" ]] &&
-  [[ -z "$readme_file_exists_repo" ]]
-then
   printf "Downloading existing \"README.MD\" from \"$readme_file_url\".\n"
   while 
     [[ -z "$readme_file_url_wget" ]]
   do
-    wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
     if
-      [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+      check_connection
     then
-      printf "Existing \"README.MD\" downloaded from \"$readme_file_url\".\n"
-      readme_file_url_wget=true
+      wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
+      if
+        [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+      then
+        printf "Existing \"README.MD\" downloaded from \"$readme_file_url\".\n"
+        readme_file_url_wget=true
+      fi
     fi
   done
 fi
@@ -620,7 +599,7 @@ then
   while [[ -z "$create_readme_confirmed" ]]
   do
     printf "Would you like to create an empty \"README.MD\" file in the local repository? Yes/No: "
-    read -r -e "confirm_create_readme"
+    read -r "confirm_create_readme"
     confirm_create_readme="$(\
       printf "$confirm_create_readme" |\
         tr '[:upper:]' '[:lower:]')"
@@ -659,7 +638,7 @@ while
   [[ "$readme_file_exists_repo" == "true" ]]
 do
   printf "Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
-  read -r -e "confirm_edit_readme"
+  read -r "confirm_edit_readme"
   confirm_edit_readme="$(\
     printf "$confirm_edit_readme" |\
       tr '[:upper:]' '[:lower:]')"
@@ -737,54 +716,54 @@ then
     fi
   done
 fi
-
-
-
-
 # Request the user to create a custom Git commit message
-commit_message_template="$(git config --global --get-all commit.template)"
-if
-  [[ -f "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG" ]]
-then
-  existing_commit_message="$(head -n 1 "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG")"
-  default_commit_message="$existing_commit_message"
-elif
-  [[ -n "$commit_message_template" ]]
-then
-  default_commit_message="$commit_message_template"
-else
-  default_commit_message="Initial commit"
-fi
-while
-  [[ -z "$commit_message_commited" ]]
-do
-  if
-    [[ -z "$commit_message" ]] || 
-    [[ -n "$commit_message" ]]
-  then
-    printf "Edit the commit message. 50 characters max.\n"
-    if
-      [[ -n "$commit_message" ]]
-    then
-      default_commit_message="$commit_message"
-    fi
-    read -r -e -i "$default_commit_message" "commit_message"
-    if
-      (( "${#commit_message}" >= "1" )) &&
-      (( "${#commit_message}" <= "50" ))
-    then
-      commit_message_commited="true"
-    else
-      printf "Commit message must be between 1 and 50 characters.\n"
-    fi
-  fi
-done
-   
-        
-
-# Index files from staging to be ready for commit to GitHub
 if 
   [[ "$repo_git_added_all" == "true" ]]
+then
+  commit_message_template="$(\
+    git config --global --get-all commit.template)"
+  if
+    [[ -f "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG" ]]
+  then
+    existing_commit_message="$(\
+      head -n 1 "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG")"
+    default_commit_message="$existing_commit_message"
+  elif
+    [[ -n "$commit_message_template" ]]
+  then
+    default_commit_message="$commit_message_template"
+  else
+    default_commit_message="Initial commit"
+  fi
+  while
+    [[ -z "$commit_message_commited" ]]
+  do
+    if
+      [[ -z "$commit_message" ]] || 
+      [[ -n "$commit_message" ]]
+    then
+      printf "Edit the commit message. 50 characters max.\n"
+      if
+        [[ -n "$commit_message" ]]
+      then
+        default_commit_message="$commit_message"
+      fi
+      read -r -e -i "$default_commit_message" "commit_message"
+      if
+        (( "${#commit_message}" >= "1" )) &&
+        (( "${#commit_message}" <= "50" ))
+      then
+        commit_message_commited="true"
+      else
+        printf "Commit message must be between 1 and 50 characters.\n"
+      fi
+    fi
+  done
+fi
+# Index files from staging to be ready for commit to GitHub
+if 
+  [[ "$repo_git_added_all" == "true" ]] &&
+  [[ "$commit_message_commited" == "true" ]]
 then
   if 
     ! git -C "$HOME/.github/$repo_name.git" commit -m "$commit_message" |\
@@ -795,48 +774,43 @@ then
   repo_git_commited_all="true"
 fi
 # Check to see if repository exists already on GitHub
-if
-  [[ "$repo_git_commited_all" == "true" ]]
-then
-  check_connection
-fi
 if 
-  [[ "$connected_internet" == "true" ]] &&
   [[ "$repo_git_commited_all" == "true" ]]
 then
   git_repo_url="https://github.com/$git_username/$repo_name"
   if 
-    gh repo view "$git_username/$repo_name" --json name &>\
-      /dev/null
+    check_connection
   then
-    printf "Repository already exists at: \"$git_repo_url\"\n"
-    git_repo_exists="true"
-  else
-    printf "Repository doesn't exist at: \"$git_repo_url\".\n"
-    git_repo_exists="false"
+    if
+      gh repo view "$git_username/$repo_name" --json name &>\
+        /dev/null
+    then
+      printf "Repository already exists at: \"$git_repo_url\"\n"
+      git_repo_exists="true"
+    else
+      printf "Repository doesn't exist at: \"$git_repo_url\".\n"
+      git_repo_exists="false"
+    fi
   fi
 fi
 # Create a remote repository
-if
-  [[ "$repo_git_commited_all" == "true" ]] &&
-  [[ "$git_repo_exists" == "false" ]]
-then
-  check_connection
-fi
 if 
-  [[ "$connected_internet" == "true" ]] &&
   [[ "$repo_git_commited_all" == "true" ]] &&
   [[ "$git_repo_exists" == "false" ]]
 then
   printf "Attempting to create a new repository on GitHub.\n"
   if 
-    gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public >&\
-      /dev/null
+    check_connection
   then
-    printf "GitHub repository successfully created at: \"$git_repo_url\"\n"
-    git_repo_created="true"
-  else
-    printf "GitHub repository creation failed at: \"$git_repo_url\"\n"
+    if
+      gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public \
+        >& /dev/null
+    then
+      printf "GitHub repository successfully created at: \"$git_repo_url\"\n"
+      git_repo_created="true"
+    else
+      printf "GitHub repository creation failed at: \"$git_repo_url\"\n"
+    fi
   fi
 fi
 #
@@ -844,23 +818,20 @@ fi
 #
 #
 # Creating a description for your repository
-if
-  [[ -z "$confirm_edited_description" ]] ||
-  [[ "$confirm_edited_description" != "true" ]]
-then
-  check_connection
-fi
 while 
-  [[ "$connected_internet" == "true" ]] &&
   [[ -z "$confirm_edited_description" ]] ||
   [[ "$confirm_edited_description" != "true" ]]
 do
   if [[ "$git_repo_created" == "true" ]] ||
      [[ "$git_repo_exists" == "true" ]]
   then
-    current_description="$(\
-      gh repo view "$git_username/$repo_name" --json "description" |\
-        awk -F '"' '{print $4}')"
+    if
+      check_connection
+    then
+      current_description="$(\
+        gh repo view "$git_username/$repo_name" --json "description" |\
+          awk -F '"' '{print $4}')"
+    fi
     printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
     if 
       [[ -z "$current_description" ]]
@@ -877,7 +848,7 @@ do
         true
       do
         printf "Is this correct? Yes/No: "
-        read -r -e "confirm_edited_description"
+        read -r "confirm_edited_description"
         confirm_edited_description="$(\
           printf "%s" "$confirm_edited_description" |\
             tr '[:upper:]' '[:lower:]')"
@@ -911,12 +882,6 @@ fi
 if
   [[ "$edited_description_differs" == "true" ]]
 then
-  check_connection
-fi
-if
-  [[ "$connected_internet" == "true" ]] &&
-  [[ "$edited_description_differs" == "true" ]]
-then
   if 
     [[ -n "$edited_description" ]]
   then
@@ -924,11 +889,15 @@ then
       [[ -z "$description_uploaded" ]]
     do
       if 
-        gh repo edit "$git_username/$repo_name" --description "$edited_description" >&\
-          /dev/null
+        check_connection
       then
-        printf "Description successfully updated.\n"
-        description_uploaded="true"
+        if 
+          gh repo edit "$git_username/$repo_name" --description "$edited_description" >&\
+            /dev/null
+        then
+          printf "Description successfully updated.\n"
+          description_uploaded="true"
+        fi
       fi
     done
   fi
@@ -943,53 +912,45 @@ if
   [[ "$git_repo_exists" == "true" ]] &&
   [[ "$confirm_edited_description" == "true" ]]
 then
-  check_connection
-fi
-if
-  [[ "$connected_internet" == "true" ]] &&
-  [[ "$git_repo_created" == "true" ]] ||
-  [[ "$git_repo_exists" == "true" ]] &&
-  [[ "$confirm_edited_description" == "true" ]]
-then
   printf "Checking GitHub for the latest commit hash.\n"
-  previous_commit="$(\
-    git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
-    git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
-    before_commit_check=true
+  if
+    check_connection
+  then
+    previous_commit="$(\
+      git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
+      git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
+      before_commit_check=true
+  fi
 fi
 # Forcefully push all local files to remote repository
 if
   [[ "$before_commit_check" == "true" ]]
 then
-  check_connection
-fi
-if
-  [[ "$connected_internet" == "true" ]] &&
-  [[ "$before_commit_check" == "true" ]]
-then
   printf "Pushing changes to GitHub.\n"
   if
-    git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master >&\
-      /dev/null
+    check_connection
   then
-    printf "Pushed \"$filename\" to \"$git_repo_url\".\n"
-    git_repo_pushed="true"
+    if
+      git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master \
+        >& /dev/null
+    then
+      printf "Pushed \"$filename\" to \"$git_repo_url\".\n"
+      git_repo_pushed="true"
+    fi
   fi
 fi
 # Check to see what the latest commit hash is
 if
   [[ "$git_repo_pushed" == "true" ]]
 then
-  check_connection
-fi
-if
-  [[ "$connected_internet" == "true" ]] &&
-  [[ "$git_repo_pushed" == "true" ]]
-then
   printf "Checking GitHub for the latest commit hash.\n"
-  latest_commit="$(\
-    git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
-  after_commit_check=true
+  if
+    check_connection
+  then
+    latest_commit="$(\
+      git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
+    after_commit_check=true
+  fi
 fi
 # Comparing the old hash vs the new hash
 if 
