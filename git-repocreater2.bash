@@ -67,7 +67,8 @@ fi
 check_connection() {
   printf "Testing \"www.GitHub.com\" connection.\n"
   while 
-    ! ping -W 1 -c 3 www.github.com >& /dev/null
+    ! ping -W 0.5 -c 3 www.github.com \
+      >& /dev/null
   do
     printf "Can't connect to \"www.GitHub.com\".\n"
     connected_internet="false"
@@ -559,7 +560,8 @@ then
     check_connection
   then
     if
-      wget --spider "$readme_file_url" >& /dev/null
+      wget --spider "$readme_file_url" \
+        >& /dev/null
     then
       printf "\"README.MD\" does exists on the GitHub repository.\n"
       readme_file_exist_url=true
@@ -892,8 +894,8 @@ then
         check_connection
       then
         if 
-          gh repo edit "$git_username/$repo_name" --description "$edited_description" >&\
-            /dev/null
+          gh repo edit "$git_username/$repo_name" --description "$edited_description" \
+            >& /dev/null
         then
           printf "Description successfully updated.\n"
           description_uploaded="true"
