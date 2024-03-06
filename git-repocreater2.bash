@@ -88,11 +88,11 @@ check_connection() {
   connected_internet="true"
 }
 #
-## GNU General Public License v3.0 (gpl-3.0) prompt
+## Disclaimer GNU General Public License v3.0 (gpl-3.0)
 printf \
-"This program comes with ABSOLUTELY NO WARRANTY!\n"
+'This program comes with ABSOLUTELY NO WARRANTY!\n'
 printf \
-"This is free software, and you are welcome to redistribute it under certain conditions.\n"
+'This is free software, and you are welcome to redistribute it under certain conditions.\n'
 #
 #
 #
@@ -141,76 +141,62 @@ then
 else
   printf "You are already authenticated with GitHub.\n"
 fi
-## Generating a .netrc file with an access token in it. 
+## Generating a .netrc file with an access token in it
 #
 #
 #
 #
 ## Creating a local repository
 # Generating a name for the new repository
-if 
+if
   [[ -e "$1" ]]
 then
-  while 
-    true
+  while
+    [[ -z "$confirm_repo_name" ]] ||
+    [[ "$confirm_repo_name" == "false" ]]
   do
-    repo_name_temp="$(\
-      mktemp)"
-    printf "$1" |\
-      awk -F '/' '{printf$NF}' >\
-        "$repo_name_temp"
-    repo_name_empty_msg_shown="false"
+    repo_name="$(printf "$1" | awk -F '/' '{print $NF}')"
+    read -r -e -i "$(printf "$repo_name")" "repo_name"
     if 
-      ! "$repo_name_empty_msg_shown"
+      [[ -z "$repo_name" ]]
     then
-      printf "Modify the name of the new repository:\n"
+      printf "Repository name cannot be empty.\n"
+    elif
+      (( "${#repo_name}" >= "100" ))
+    then
+      printf "Repository name cannot be more than 100 characters.\n"
+    elif 
+      [[ "$repo_name" =~ [^[:alnum:]._-] ]]
+    then
+      printf "Repository name can only contain \"A-Z\" \"0-9\" \"period .\" \"hyphen -\" or \"underscore _\".\n"
+    else
+      while 
+        true
+      do
+        printf "Is this correct? Yes/No: "
+        read -r "confirm_repo_name"
+        confirm_repo_name="$(printf "%s" "$confirm_repo_name" | tr '[:upper:]' '[:lower:]')"
+        if 
+          [[ "$confirm_repo_name" == "yes" ]] ||
+          [[ "$confirm_repo_name" == "y" ]]
+        then
+          confirm_repo_name="true"
+          break 2
+        elif [[ "$confirm_repo_name" == "no" ]] ||
+             [[ "$confirm_repo_name" == "n" ]]
+        then
+          confirm_repo_name="false"
+          break 1
+        fi
+      done
     fi
-    while 
-      true
-    do
-      read -r -e -i "$(\
-        cat "$repo_name_temp")" "repo_name"
-      if 
-        [[ -z "$repo_name" ]]
-      then
-        printf "Repository name cannot be empty.\n"
-        repo_name_empty_msg_shown="true"
-      else
-        break 1
-      fi
-    done
-    while
-      true
-    do
-      if
-        [[ -z "$chosen_name_message_shown" ]]
-      then
-        printf "The chosen name for the new repository is: \"$repo_name\".\n"
-      fi
-      printf "Is this correct? Yes/No: "
-      read -r "confirm_repo_name"
-      if 
-        [[ "$confirm_repo_name" == "yes" ]] ||
-        [[ "$confirm_repo_name" == "y" ]]
-      then
-        break 2 
-      elif [[ "$confirm_repo_name" == "no" ]] ||
-           [[ "$confirm_repo_name" == "n" ]]
-      then
-        break 1
-      else
-        chosen_name_message_shown="true"
-      fi
-    done
-    rm -r "$repo_name_temp" &>\
-      /dev/null
   done
 fi
 #
 #
 #
 #
-## Creating a working directory
+## Creating a staging directory
 # Check for existing repo with same name
 if 
   ! [[ -d "$HOME/.github/$repo_name.git" ]]
