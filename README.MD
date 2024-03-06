@@ -59,6 +59,7 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
+    Clean up some of the check_internet checks.
     Unset all variables after use, for "security".
     Add non interactive mode functioning on argument options.
     Check to see if secret token has correct GitHub scopes access.

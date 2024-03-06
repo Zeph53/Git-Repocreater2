@@ -70,8 +70,7 @@ fi
 check_connection() {
   printf "Testing \"www.GitHub.com\" connection.\n"
   while 
-    ! ping -i 0.25 -W 2 -c 4 "www.github.com" \
-      >& /dev/null
+    ! ping -i 0.25 -W 2 -c 4 "www.github.com" >& /dev/null
   do
     printf "Can't connect to \"www.GitHub.com\".\n"
     connected_internet="false"
@@ -84,7 +83,13 @@ check_connection() {
     done
     printf "\n"
   done
-  printf "Connected to \"www.GitHub.com\".\n"
+  if
+    [[ "$connected_internet" == "true" ]]
+  then
+    true
+  else
+    printf "Connected to \"www.GitHub.com\".\n"
+  fi
   connected_internet="true"
 }
 #
