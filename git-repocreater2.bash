@@ -71,6 +71,8 @@ check_connection() {
   if
     [[ "$connected_internet" == "true" ]]
   then
+    true
+  else
     printf "Testing \"www.GitHub.com\" connection.\n"
   fi
   while 
