@@ -68,7 +68,11 @@ fi
 ## Function to check to see if still connected to the internet,
 ## or at least to github.com
 check_connection() {
-  printf "Testing \"www.GitHub.com\" connection.\n"
+  if
+    [[ "$connected_internet" == "true" ]]
+  then
+    printf "Testing \"www.GitHub.com\" connection.\n"
+  fi
   while 
     ! ping -i 0.25 -W 2 -c 4 "www.github.com" >& /dev/null
   do
@@ -173,7 +177,8 @@ then
     elif 
       [[ "$repo_name" =~ [^[:alnum:]._-] ]]
     then
-      printf "Repository name can only contain \"A-Z\" \"0-9\" \"period .\" \"hyphen -\" or \"underscore _\".\n"
+      printf "Repository name can only contain \
+\"A-Z\" \"0-9\" \"period .\" \"hyphen -\" or \"underscore _\".\n"
     else
       while 
         true
@@ -292,7 +297,8 @@ git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
 if
   [[ "$lic_file_exists_repo" == "false" ]]
 then
-  lic_file_github_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/LICENSE.MD"
+  lic_file_github_url=\
+    "https://raw.githubusercontent.com/$git_username/$repo_name/master/LICENSE.MD"
   if 
     check_connection
   then
