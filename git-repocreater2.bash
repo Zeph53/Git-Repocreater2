@@ -228,41 +228,43 @@ then
   printf "\"$filename\" already exists in \"$repo_name.git/$filename\".\n"
   filename_exists="true"
 else
-  printf "\"$filename\" does not exists in \"$HOME/.github/$repo_name.git/$filename\".\n"
+  printf "\"$filename\" does not exists in \"$repo_name.git/$filename\".\n"
 fi
 # Check to see if selected file is different from what's in the repo already
 if 
-  [[ "$repo_dir_exists"  == "true" ]] ||
+  [[ "$repo_dir_exists"  == "true" ]] &&
   [[ "$filename_exists" == "true" ]]
 then
   if 
-    ! diff --brief "$1" "$HOME/.github/$repo_name.git/$filename" &>\
-        /dev/null
+    ! diff --brief "$1" "$HOME/.github/$repo_name.git/$filename" &> /dev/null
   then
     printf "\"$filename\" differs from \"$repo_name.git/$filename\".\n"
     filename_differs_from_repo="true"
+  else
+    printf "\"$filename\" is the same as \"$repo_name.git/$filename\".\n"
   fi
 fi
 # Forcefully copy file into repository, overwriting previous file
-if 
-  [[ "$repo_dir_exists" == "true" ]] ||
-  [[ "$filename_differs_from_repo" == "true" ]]
+if
+  [[ "$repo_dir_exists" == "true" ]]
 then
-  while 
-    [[ -z "$content_copied_to_repo" ]]
-  do
-    printf "Copying \"$filename\" into \"$HOME/.github/$repo_name.git/$filename\".\n"
-    if 
-      cp --force --recursive "$1" "$HOME/.github/$repo_name.git"
-    then
-      printf "File or directory successfully copied into repository.\n"
-      content_copied_to_repo="true"
-      break 1
-    fi
-  done
-else
-  printf "\"$filename\" is the same as \"$HOME/.github/$repo_name.git/$filename\".\n"
-  printf "Not copying file or directory added as argument.\n"
+  if
+    [[ -z "$filename_exists" ]] ||
+    [[ "$filename_differs_from_repo" == "true" ]]
+   then
+    while
+      [[ -z "$content_copied_to_repo" ]]
+    do
+      printf "Copying \"$filename\" into \"$repo_name.git/$filename\".\n"
+      if
+        cp --force --recursive "$1" "$HOME/.github/$repo_name.git"
+      then
+        printf "\"$filename\" successfully copied to \"$repo_name.git/$filename.\n"
+        content_copied_to_repo="true"
+        break
+      fi
+    done
+  fi
 fi
 #
 #
@@ -299,8 +301,7 @@ git_username="$(cat ~/.config/gh/hosts.yml | awk '/user:/ {printf $NF}')"
 if
   [[ "$lic_file_exists_repo" == "false" ]]
 then
-  lic_file_github_url=\
-    "https://raw.githubusercontent.com/$git_username/$repo_name/master/LICENSE.MD"
+  lic_file_github_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/LICENSE.MD"
   if 
     check_connection
   then
@@ -863,32 +864,53 @@ fi
 #
 #
 # Creating a description for your repository
-while 
+while
   [[ -z "$confirm_edited_description" ]] ||
-  [[ "$confirm_edited_description" != "true" ]]
+  [[ "$confirm_edited_description" == "false" ]]
 do
-  if [[ "$git_repo_created" == "true" ]] ||
-     [[ "$git_repo_exists" == "true" ]]
+  if
+    [[ "$git_repo_created" == "true" ]] ||
+    [[ "$git_repo_exists" == "true" ]]
   then
+    default_description="No description, website, or topics provided."
     if
-      check_connection
+      [[ -z "$edited_description_empty" ]]
     then
-      current_description="$(\
-        gh repo view "$git_username/$repo_name" --json "description" |\
-          awk -F '"' '{print $4}')"
-    fi
-    printf "Edit the description for \"$git_repo_url\". 350 characters max.\n"
-    if 
-      [[ -z "$current_description" ]]
-    then
-      current_description="No description, website, or topics provided."
+      if
+        check_connection
+      then
+        existing_description="$(\
+          gh repo view "$git_username/$repo_name" --json "description" |\
+             awk -F '"' '{print $4}')"
+      fi
+      if
+        [[ -z "$existing_description" ]]
+      then
+        current_description="$default_description"
+      elif
+        [[ -n "$existing_description" ]]
+      then
+        current_description="$existing_description"
+      fi
     fi
     read -r -e -i "$current_description" "edited_description"
-    if 
-      (( "${#edited_description}" >= "0" )) && 
-      (( "${#edited_description}" <= "350" ))
+    if
+      [[ -z "$edited_description" ]]
     then
+      printf "\nRepository description can not be empty, setting it to default.\n"
+      current_description="$default_description"
+      edited_description_empty="true"
+    elif
+      (( "${#edited_description}" >= "350" ))
+    then
+      printf "Repository description can not be more than 350 characters.\n"
+    else
       printf "Description: \"$edited_description\"\n"
+      if
+        [[ "$edited_description" == "$default_description" ]]
+      then
+        edited_description=" "
+      fi
       while 
         true
       do
@@ -910,16 +932,13 @@ do
           break 1
         fi
       done
-    else
-      printf "Description exceeds the 350 character limit.\n"
     fi
   fi
 done
 # Check to see if the new description is different from the old one
 if 
   [[ "$confirm_edited_description" == "true" ]] &&
-  [[ "$edited_description" != "$current_description" ]] ||
-  [[ "$edited_description" != "No description, website, or topics provided." ]]
+  [[ "$edited_description" != "$existing_description" ]]
 then
   edited_description_differs="true"
 fi
@@ -962,8 +981,8 @@ then
     check_connection
   then
     previous_commit="$(\
-      git -C "$HOME/.github/Git-Repocreater2.git" fetch origin ;
-        git -C "$HOME/.github/Git-Repocreater2.git" rev-parse origin/master)"
+      git -C "$HOME/.github/$repo_name.git" fetch origin ;
+        git -C "$HOME/.github/$repo_name.git" rev-parse origin/master)"
     before_commit_check="true"
   fi
 fi

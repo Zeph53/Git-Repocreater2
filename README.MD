@@ -18,7 +18,7 @@ Please report any bugs.
     Selecting and automatically downloading LICENSE.MD templates into cache directory.
     Automatically copying LICENSE.MD templates to staging directory.
     Creating new README.MD files.
-    Checking for existing LICENSE.MD and README.MD files from GitHub, downloading them instead.
+    Automatically checking for existing LICENSE.MD and README.MD files from GitHub, downloading them instead.
     Manually editing LICENSE.MD and README.MD files currently set for staging with NANO.
     Automatically initiating local repository and indexing all files from staging directory.
     Prompting for a custom Git Commit message.
@@ -52,6 +52,13 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
+    Fixed typo in previous commit hash gathering.
+    There is now a default description.
+    Description generation rewrite.
+    Improved repository description generation.
+    Fixed bug where the existing LICENSE.MD url on GitHub was being executed as a command.
+    Fixed bug where existing non different file was getting overwritten anyway.
+    Cleaned up the check_internet function.
     Additional README.MD improvements.
     Completely rewrite repository name generation. Name generation now complies with GitHub.
     README.MD improvements.
@@ -59,13 +66,12 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
-    Clean up some of the check_internet checks.
+    Check to see if README.MD on GitHub has been updated via web browser instead of the script, download that instead.
     Unset all variables after use, for "security".
     Add non interactive mode functioning on argument options.
     Check to see if secret token has correct GitHub scopes access.
     Remove some of the "Yes/No" confirmations.
     Rewrite logging in. 
-    **** Rewrite repository name generation.
     Add custom description for custom commit messages.
     Improve default empty README.MD
     Add option for custom LICENSE.MD.
