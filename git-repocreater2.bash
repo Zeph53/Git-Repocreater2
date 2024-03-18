@@ -952,12 +952,8 @@ if
   [[ "$confirm_edited_description" == "true" ]]
 then
   printf "Checking GitHub for the latest commit hash.\n"
-  if
-    check_connection
-  then
-    previous_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse origin/master)"
-    before_commit_check="true"
-  fi
+  previous_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse origin/master)"
+  before_commit_check="true"
 fi
 # Forcefully push all local files to remote repository
 if
@@ -980,12 +976,8 @@ if
   [[ "$git_repo_pushed" == "true" ]]
 then
   printf "Checking GitHub for the latest commit hash.\n"
-  if
-    check_connection
-  then
-    latest_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
-    after_commit_check="true"
-  fi
+  latest_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse HEAD)"
+  after_commit_check="true"
 fi
 # Comparing the old hash vs the new hash
 if

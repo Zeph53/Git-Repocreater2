@@ -52,6 +52,7 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
+    Removed some internet connection checks for "optimization".
     Corrected issue where creation of repository would fail if there was existing remote origin references in local repository.
     Removed trailing whitespaces from while and if statements.
     Removed silly newlines within command substituted variables. There are now some "long lines", and better ways to fix them.
