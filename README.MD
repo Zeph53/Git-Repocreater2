@@ -52,21 +52,26 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
+    Corrected issue where creation of repository would fail if there was existing remote origin references in local repository.
+    Removed trailing whitespaces from while and if statements.
+    Removed silly newlines within command substituted variables. There are now some "long lines", and better ways to fix them.
+    Cleaned up some printf messages.
+    When asked to edit text files, Nano now uses correct syntax, and other options.
     Fixed typo in previous commit hash gathering.
     There is now a default description.
     Description generation rewrite.
-    Improved repository description generation.
     Fixed bug where the existing LICENSE.MD url on GitHub was being executed as a command.
     Fixed bug where existing non different file was getting overwritten anyway.
     Cleaned up the check_internet function.
     Additional README.MD improvements.
-    Completely rewrite repository name generation. Name generation now complies with GitHub.
+    Completely rewrite repository name generation, now complies with GitHub.
     README.MD improvements.
     Started on a README.MD.
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
-    Check to see if README.MD on GitHub has been updated via web browser instead of the script, download that instead.
+    Print list of remote and local repository names at repo_name variable creation.
+    Check to see if README.MD was updated via GitHub, download/merge that instead.
     Unset all variables after use, for "security".
     Add non interactive mode functioning on argument options.
     Check to see if secret token has correct GitHub scopes access.
