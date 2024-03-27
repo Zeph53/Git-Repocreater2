@@ -196,7 +196,7 @@ then
           fi
         fi
       done
-      repo_names_local_listed=="true"
+      repo_names_local_listed="true"
     fi
     if
       [[ -z "$repo_name_set" ]]
