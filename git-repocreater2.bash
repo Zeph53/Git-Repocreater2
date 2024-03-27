@@ -162,21 +162,80 @@ then
     [[ -z "$confirm_repo_name" ]] ||
     [[ "$confirm_repo_name" == "false" ]]
   do
-    repo_name="$(printf "$1" | awk -F '/' '{print $NF}')"
-    read -r -e -i "$(printf "$repo_name")" "repo_name"
+    if
+      [[ -z "$repo_names_remote_listed" ]] &&
+      check_connection
+    then
+      repo_names_remote_list="$(gh repo list)"
+      repo_names_remote_list_numbered=""
+      counter="1"
+      while
+        IFS="$'\t'" read -r "repo"
+      do
+        repo_name="$(printf "$repo" | awk -F '\t' '{split($1, arr, "/"); print arr[2]}')"
+        repo_names_remote_list_numbered+="$counter. $repo_name"$'\n'
+        ((counter++))
+      done <<< "$repo_names_remote_list"
+      printf "Existing remote GitHub repository names: \n"
+      printf "%s" "$repo_names_remote_list_numbered"
+      repo_names_remote_listed="true"
+    fi
+    if
+      [[ -z "$repo_names_local_listed" ]]
+    then
+      for repo in "$HOME"/.github/*/.git
+      do
+        if
+          [[ -d "$repo" ]]
+        then
+          printf "Existing local GitHub repository names: \n"
+          if
+            git -C "$(dirname "$repo")" status &>/dev/null
+          then
+            printf "$(dirname "$repo")\n" | awk -F '/' '{gsub(/\.git$/,"", $NF); print $NF}'
+          fi
+        fi
+      done
+      repo_names_local_listed=="true"
+    fi
+    if
+      [[ -z "$repo_name_set" ]]
+    then
+      repo_name="$(printf "$1" | awk -F '/' '{print $NF}')"
+    fi
+    if
+      [[ -z "$enter_name_shown" ]]
+    then
+      printf "Enter a name to use for the repository: \n"
+      enter_name_shown="true"
+    fi
+    if
+      true
+    then
+      read -r -e -i "$(printf "$repo_name")" "repo_name"
+      repo_name_set="true"
+    fi
+    if
+      [[ $repo_name =~ ^[0-9]+$ && $repo_name -ge 1 && $repo_name -le $((counter - 1)) ]]
+    then
+      selected_repo="$(printf "$repo_names_remote_list" | awk -v num="$repo_name" 'NR==num {split($1, arr, "/"); print arr[2]}')"
+      printf "$selected_repo\n"
+      repo_name="$selected_repo"
+      unset "repo_name_set"
+    fi
     if
       [[ -z "$repo_name" ]]
     then
       printf "Repository name cannot be empty.\n"
+      unset "repo_name_set"
+    elif
+      [[ "$repo_name" =~ [^[:alnum:]._-] ]]
+    then
+      printf "Repository name can only contain \"A-Z\" \"0-9\" \"period .\" \"hyphen -\" or \"underscore _\".\n"
     elif
       (( "${#repo_name}" >= "100" ))
     then
       printf "Repository name cannot be more than 100 characters.\n"
-    elif
-      [[ "$repo_name" =~ [^[:alnum:]._-] ]]
-    then
-      printf "Repository name can only contain \
-\"A-Z\" \"0-9\" \"period .\" \"hyphen -\" or \"underscore _\".\n"
     else
       while
         true

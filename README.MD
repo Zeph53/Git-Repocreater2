@@ -52,6 +52,7 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
+    Existing repository names are now printed at repository name creation, you can also use the number corresponding with the existing name to use that name instead of creating a new one.
     Removed some internet connection checks for "optimization".
     Corrected issue where creation of repository would fail if there was existing remote origin references in local repository.
     Removed trailing whitespaces from while and if statements.
@@ -71,7 +72,7 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
-    Print list of remote and local repository names at repo_name variable creation.
+    Add many debug messages, such as error codes.
     Check to see if README.MD was updated via GitHub, download/merge that instead.
     Unset all variables after use, for "security".
     Add non interactive mode functioning on argument options.
