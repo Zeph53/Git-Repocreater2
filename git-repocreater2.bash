@@ -1366,7 +1366,6 @@ do
     then
       printf "Repository description can not be more than 350 characters.\n"
     else
-      printf "Description: \"$edited_description\"\n"
       if
         [[ "$edited_description" == "$default_description" ]]
       then
