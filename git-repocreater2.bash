@@ -1241,10 +1241,12 @@ then
     [[ -z "$commit_message_commited" ]]
   do
     if
+      [[ -z "$edit_commit_message_shown" ]]
       [[ -z "$commit_message" ]] || 
       [[ -n "$commit_message" ]]
     then
       printf "Edit the commit message. 50 characters max.\n"
+      edit_commit_message_shown="true"
       if
         [[ -n "$commit_message" ]]
       then
@@ -1354,6 +1356,7 @@ do
         current_description="$existing_description"
       fi
     fi
+    printf "Edit the repository description, 350 characters max: \n"
     read -r -e -i "$current_description" "edited_description"
     if
       [[ -z "$edited_description" ]]
@@ -1428,8 +1431,6 @@ fi
 #
 #
 #
-# Configure email address associated with current repository.
-#git -C "$HOME/.github/$repo_name.git" log --all --format='%aE' | sort -u
 # Check to see what the current commit hash is
 if
   [[ "$git_repo_created" == "true" ]] ||
