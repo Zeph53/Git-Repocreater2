@@ -148,7 +148,7 @@ then
 else
   printf "You are already authenticated with GitHub.\n"
 fi
-## Generating a .netrc file with an access token in it
+# Generating a .netrc file with an access token in it
 #
 #
 #
@@ -795,6 +795,431 @@ then
     fi
   done
 fi
+#
+## Selecting an email for the repository
+# Gather all associated emails
+while
+  [[ -z "$public_events_data" ]]
+do
+  if
+    check_connection
+  then
+    public_events_data="$(curl -s "https://api.github.com/users/$git_username/events/public")"
+  fi
+done
+if
+  [[ -n "$public_events_data" ]]
+then
+  remote_emails_list="$(printf "%s" "$public_events_data" | awk -F '"' '/"email":/{print $4}' | sort -u | grep -v '^$')"
+  local_emails_list="$(git -C "$HOME/.github/$repo_name.git" log --all --format='%aE' | sort -u)"
+  global_email="$(git -C "$HOME/.github/$repo_name.git" config --global user.email)"
+  local_repo_email="$(git -C "$HOME/.github/$repo_name.git" config --local user.email)"
+  emails_list_gathered="true"
+fi
+# Number each email found with a number
+if
+  [[ "$emails_list_gathered" == "true" ]]
+then
+  declare -A email_numbers
+  email_count=1
+  for email in $remote_emails_list
+  do
+    if
+      [[ ! -v email_numbers["$email"] ]]
+    then
+      email_numbers["$email"]=$email_count
+      ((email_count++))
+    fi
+  done
+  for email in $local_emails_list
+  do
+    if
+      [[ ! -v email_numbers["$email"] ]]
+    then
+      email_numbers["$email"]=$email_count
+      ((email_count++))
+    fi
+  done
+  if
+    [[ -n "$global_email" ]]
+  then
+    if
+      [[ ! -v email_numbers["$global_email"] ]]
+    then
+      email_numbers["$global_email"]=$email_count
+      ((email_count++))
+    fi
+  fi
+  if
+    [[ -n "$local_repo_email" ]]
+  then
+    if
+      [[ ! -v email_numbers["$local_repo_email"] ]]
+    then
+      email_numbers["$local_repo_email"]=$email_count
+      ((email_count++))
+    fi
+  fi
+  email_list_numbered="true"
+fi
+# Display each email found with the number
+if
+  [[ "$email_list_numbered" == "true" ]]
+then
+  printf "Email addresses publicly associated with \"$git_username\": \n"
+  for email in $remote_emails_list
+  do
+    printf " %s. %s\n" "${email_numbers[$email]}" "$email"
+  done
+  printf "Email addresses locally associated with \"$repo_name.git\": \n"
+  for email in $local_emails_list
+  do
+    printf " %s. %s\n" "${email_numbers[$email]}" "$email"
+  done
+  if
+    [[ -n "$global_email" ]]
+  then
+    printf "Email address globally defined for Git operations: \n"
+    printf " %s. %s\n" "${email_numbers[$global_email]}" "$global_email"
+  else
+    printf "Email address to globally use for Git operations is not configured. \n"
+  fi
+  if
+    [[ -n "$local_repo_email" ]]
+  then
+    printf "Email address currently assigned to \"$repo_name\": \n"
+    printf " %s. %s\n" "${email_numbers[$local_repo_email]}" "$local_repo_email"
+  else
+    printf "Email address assigned to \"$repo_name\" is not configured. \n"
+  fi
+fi
+# Determine what the default email should be for preloaded text
+if
+  [[ -n "$local_repo_email" ]]
+then
+  default_email="$local_repo_email"
+elif
+  [[ -n "$global_email" ]]
+then
+  default_email="$global_email"
+elif
+  [[ -z "$local_repo_email" ]] &&
+  [[ -z "$global_email" ]]
+then
+  unconfigured_email="unconfigured"
+  default_email="$unconfigured_email"
+  not_configured_email="true"
+fi
+# Prompt the user to select a valid email address
+while
+  [[ -z "$selected_email_input_confirmed" ]] ||
+  [[ "$selected_email_input_confirmed" == "false" ]]
+do
+  while
+    [[ -z "$email_valid" ]] ||
+    [[ "$email_valid" == "false" ]]
+  do
+    if
+      [[ -z "$enter_email_shown" ]]
+    then
+      printf "Enter a corresponding number or a custom email address to assign to \"$repo_name\": \n"
+      enter_email_shown="true"
+    fi
+    read -r -e -i "$default_email" "selected_email_input"
+    if
+      [[ "$selected_email_input" =~ ^[0-9]+$ ]]
+    then
+      if
+        [[ "${email_numbers[@]}" =~ (^|[[:space:]])"$selected_email_input"($|[[:space:]]) ]]
+      then
+        for email in "${!email_numbers[@]}"
+        do
+          if
+            [[ "${email_numbers[$email]}" == "$selected_email_input" ]]
+          then
+            selected_email="$email"
+            printf "%s\n" "$selected_email"
+            email_valid="true"
+          fi
+        done
+      else
+        printf "Selected number is invalid.\n"
+        email_valid="false"
+      fi
+    elif
+      [[ "$selected_email_input" =~ .+@.+\..+ ]]
+    then
+      selected_email="$selected_email_input"
+      email_valid="true"
+    else
+      printf "Invalid email format.\n"
+      email_valid="false"
+    fi
+  done
+  while
+    true
+  do
+    printf "Is this correct? Yes/No: "
+    read -r "confirm_selected_email_input"
+    confirm_selected_email_input="$(printf "%s" "$confirm_selected_email_input" | tr '[:upper:]' '[:lower:]')"
+    if
+      [[ "$confirm_selected_email_input" == "yes" ]] ||
+      [[ "$confirm_selected_email_input" == "y" ]]
+    then
+      selected_email_input_confirmed="true"
+      break 2
+    elif
+      [[ "$confirm_selected_email_input" == "no" ]] ||
+      [[ "$confirm_selected_email_input" == "n" ]]
+    then
+      selected_email_input_confirmed="false"
+      email_valid="false"
+      break 1
+    fi
+  done
+done
+# Gather all associated usernames
+if
+  [[ -n "$public_events_data" ]]
+then
+  remote_username_list="$(printf "%s" "$public_events_data" | awk -F '"' '/"author":/,/},/{if ($0 ~ /"name":/) print $4}' | sort -u)"
+  local_username_list="$(git -C "$HOME/.github/$repo_name.git" log --all --format='%aN' | sort -u)"
+  global_username="$(git -C "$HOME/.github/$repo_name.git" config --global user.name)"
+  local_repo_username="$(git -C "$HOME/.github/$repo_name.git" config --local user.name)"
+  usernames_list_gathered="true"
+fi
+# Number each username found with a number
+if
+  [[ "$usernames_list_gathered" == "true" ]]
+then
+  declare -A username_numbers
+  username_count=1
+  for username in $remote_username_list
+  do
+    if
+      [[ ! -v username_numbers["$username"] ]]
+    then
+      username_numbers["$username"]=$username_count
+      ((username_count++))
+    fi
+  done
+  for username in $local_username_list
+  do
+    if
+      [[ ! -v username_numbers["$username"] ]]
+    then
+      username_numbers["$username"]=$username_count
+      ((username_count++))
+    fi
+  done
+  if
+    [[ -n "$global_username" ]]
+  then
+    if
+      [[ ! -v username_numbers["$global_username"] ]]
+    then
+      username_numbers["$global_username"]=$username_count
+      ((username_count++))
+    fi
+  fi
+  if
+    [[ -n "$local_repo_username" ]]
+  then
+    if
+      [[ ! -v username_numbers["$local_repo_username"] ]]
+    then
+      username_numbers["$local_repo_username"]=$username_count
+      ((username_count++))
+    fi
+  fi
+  username_list_numbered="true"
+fi
+# Display each username found with the number
+if
+  [[ "$username_list_numbered" == "true" ]]
+then
+  printf "Usernames publicly associated with \"$git_username\": \n"
+  for username in $remote_username_list
+  do
+    printf " %s. %s\n" "${username_numbers[$username]}" "$username"
+  done
+  printf "Usernames locally associated with \"$repo_name.git\": \n"
+  for username in $local_username_list
+  do
+    printf " %s. %s\n" "${username_numbers[$username]}" "$username"
+  done
+  if
+    [[ -n "$global_username" ]]
+  then
+    printf "Username globally defined for Git operations: \n"
+    printf " %s. %s\n" "${username_numbers[$global_username]}" "$global_username"
+  else
+    printf "Username to globally use for Git operations is not configured. \n"
+  fi
+  if
+    [[ -n "$local_repo_username" ]]
+  then
+    printf "Username currently assigned to \"$repo_name\": \n"
+    printf " %s. %s\n" "${username_numbers[$local_repo_username]}" "$local_repo_username"
+  else
+    printf "Username assigned to \"$repo_name\" is not configured. \n"
+  fi
+fi
+# Determine what the default username should be for preloaded text
+if
+  [[ -n "$local_repo_username" ]]
+then
+  default_username="$local_repo_username"
+elif
+  [[ -n "$global_username" ]]
+then
+  default_username="$global_username"
+elif
+  [[ -z "$local_repo_username" ]] &&
+  [[ -z "$global_username" ]]
+then
+  unconfigured_username="unconfigured"
+  default_username="$unconfigured_username"
+  not_configured_username="true"
+fi
+# Prompt the user to select a valid username
+while
+  [[ -z "$selected_username_input_confirmed" ]] ||
+  [[ "$selected_username_input_confirmed" == "false" ]]
+do
+  while
+    [[ -z "$username_valid" ]] ||
+    [[ "$username_valid" == "false" ]]
+  do
+    if
+      [[ -z "$enter_username_shown" ]]
+    then
+      printf "Enter a corresponding number or a custom username to assign to \"$repo_name\": \n"
+      enter_username_shown="true"
+    fi
+    read -r -e -i "$default_username" "selected_username_input"
+    if
+      [[ "$selected_username_input" =~ ^[0-9]+$ ]]
+    then
+      if
+        [[ "${username_numbers[@]}" =~ (^|[[:space:]])"$selected_username_input"($|[[:space:]]) ]]
+      then
+        for username in "${!username_numbers[@]}"
+        do
+          if
+            [[ "${username_numbers[$username]}" == "$selected_username_input" ]]
+          then
+            selected_username="$username"
+            printf "%s\n" "$selected_username"
+            username_valid="true"
+          fi
+        done
+      else
+        printf "Selected number is invalid.\n"
+        username_valid="false"
+      fi
+    elif
+      [[ "$selected_username_input" =~ ^[a-zA-Z0-9-]+$ ]] &&
+      [[ "${#selected_username_input}" -ge 1 ]] &&
+      [[ "${#selected_username_input}" -le 39 ]]
+    then
+      selected_username="$selected_username_input"
+      username_valid="true"
+    else
+      if
+        [[ "${#selected_username_input}" -ge 39 ]]
+      then
+        printf "Username can not be more than 39 characters. \n"
+        username_valid="false"
+      elif
+        [[ "${#selected_username_input}" -le 1 ]]
+      then
+        printf "Username can not be less than 1 character. \n"
+        username_valid="false"
+      elif
+        [[ ! "$selected_username_input" =~ ^[a-zA-Z0-9-]+$ ]]
+      then
+        printf "Username can only include characters \"a-z\", \"A-Z\", \"0-9\", \"hyphen(-)\". \n"
+        username_valid="false"
+      fi
+    fi
+    selected_username_input_confirmed=""
+    while
+      [[ "$username_valid" == "true" ]] &&
+      [[ -z "$selected_username_input_confirmed" ]] 
+    do
+      printf "Is this correct? Yes/No: "
+      read -r "confirm_selected_username_input"
+      confirm_selected_username_input="$(printf "%s" "$confirm_selected_username_input" | tr '[:upper:]' '[:lower:]')"
+      if
+        [[ "$confirm_selected_username_input" == "yes" ]] ||
+        [[ "$confirm_selected_username_input" == "y" ]]
+      then
+        selected_username_input_confirmed="true"
+      elif
+        [[ "$confirm_selected_username_input" == "no" ]] ||
+        [[ "$confirm_selected_username_input" == "n" ]]
+      then
+        selected_username_input_confirmed="false"
+        username_valid="false"
+      fi
+    done
+  done
+done
+# Set useConfigOnly for local repository
+while
+  [[ -z "$use_user_conf_only" ]]
+do
+  user_conf_only="$(git -C "$HOME/.github/$repo_name.git" config --local user.useConfigOnly)"
+  if
+    [[ -z "$user_conf_only" ]] ||
+    [[ "$user_conf_only" == "false" ]] ||
+    [[ "$user_conf_only" == "False" ]]
+  then
+    git -C "$HOME/.github/$repo_name.git" config --local user.useConfigOnly true
+    if
+      user_conf_only="$(git -C "$HOME/.github/$repo_name.git" config --local user.useConfigOnly)"
+    then
+      printf "useConfigOnly for \"$repo_name\" set to: \"$user_conf_only\". \n"
+      use_user_conf_only="true"
+    fi
+  else
+    printf "useConfigOnly for \"$repo_name\" is already set to \"$user_conf_only\". \n"
+    use_user_conf_only="true"
+  fi
+done
+# Check to see if the selections are different from the one already set and change them if so
+if
+  [[ "$local_repo_username" = "$selected_username" ]]
+then
+  printf "Local repository username is already \"$selected_username\". \n"
+  local_repo_username_unchanged="true"
+else
+  printf "Local repository username is different from \"$selected_username\". \n"
+  git -C "$HOME/.github/$repo_name.git" config --local user.name "$selected_username"
+fi
+if
+  [[ "$local_repo_email" = "$selected_email" ]]
+then
+  printf "Local repository email is already \"$selected_email\". \n"
+  local_repo_email_unchanged="true"
+else
+  printf "Local repository email is different from \"$selected_email\". \n"
+  git -C "$HOME/.github/$repo_name.git" config --local user.name "$selected_email"
+fi
+# Tell the user the repository was updated with the new changes
+if
+  [[ -z "$local_repo_username_unchanged" ]] &&
+  [[ "$(git -C "$HOME/.github/$repo_name.git" config --local user.name)" == "$selected_username" ]]
+then
+  printf "\"$selected_username\" configured with \"$repo_name\"\n"
+fi
+if
+  [[ -z "$local_repo_email_unchanged" ]] &&
+  [[ "$(git -C "$HOME/.github/$repo_name.git" config --local user.email)" == "$selected_email" ]]
+then
+  printf "\"$selected_email\" configured with \"$repo_name\"\n"
+fi
 # Request the user to create a custom Git commit message
 if
   [[ "$repo_git_added_all" == "true" ]]
@@ -843,7 +1268,7 @@ if
   [[ "$commit_message_commited" == "true" ]]
 then
   if
-    ! git -C "$HOME/.github/$repo_name.git" commit -m "$commit_message" | grep "changed"
+    ! git -C "$HOME/.github/$repo_name.git" commit --author "$selected_username <$selected_email>" -m "$commit_message" | grep "changed"
   then
     printf "There was nothing to commit that wasn't already committed.\n"
   fi
@@ -1004,6 +1429,8 @@ fi
 #
 #
 #
+# Configure email address associated with current repository.
+#git -C "$HOME/.github/$repo_name.git" log --all --format='%aE' | sort -u
 # Check to see what the current commit hash is
 if
   [[ "$git_repo_created" == "true" ]] ||

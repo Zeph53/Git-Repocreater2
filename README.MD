@@ -11,7 +11,7 @@ Please report any bugs.
 #### The script is *currently capable* of performing the following tasks:  
     Logging into GitHub CLI with a Personal Access Token.
     Automatically configuring various GH (GitHub CLI) and GIT options.
-    Creating a name for the new repository.
+    Creating a name for the new repository, or selecting a previous name.
     Automatically creating a staging directory, in "$HOME/.github/NAMESPECIFIC_STAGINGDIRECTORY.git"
     Automatically copying the contents of the passed argument into staging directory.
     Automatically creating a cache directory of license files.
@@ -21,7 +21,8 @@ Please report any bugs.
     Automatically checking for existing LICENSE.MD and README.MD files from GitHub, downloading them instead.
     Manually editing LICENSE.MD and README.MD files currently set for staging with NANO.
     Automatically initiating local repository and indexing all files from staging directory.
-    Prompting for a custom Git Commit message.
+    Creating or selecting a Git commit author name and email address.
+    Creating a custom Git commit message.
     Automatically creating and checking for the remote repository on GitHub.
     Creating and editing the GitHub repository description, which would be in the "About" box on GitHub.
     Automatically pushing all indexed files from staging directory to newly created repository on GitHub.
@@ -52,6 +53,7 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
+    An author name and email address can now be used when commiting changes, previously used email addresses and author names can be selected using a numbered shortcut, or enter a new author name and email.
     Existing repository names are now printed at repository name creation, you can also use the number corresponding with the existing name to use that name instead of creating a new one.
     Removed some internet connection checks for "optimization".
     Corrected issue where creation of repository would fail if there was existing remote origin references in local repository.
@@ -72,6 +74,7 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
+    Will need to clean up numbered selector for existing repository names.
     Add many debug messages, such as error codes.
     Check to see if README.MD was updated via GitHub, download/merge that instead.
     Unset all variables after use, for "security".
