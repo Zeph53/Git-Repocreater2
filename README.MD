@@ -74,7 +74,6 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
-    It seems like the noreply GitHub email address a Git user is given is not usable, no error.
     Will need to clean up numbered selector for existing repository names.
     Add many debug messages, such as error codes.
     Check to see if README.MD was updated via GitHub, download/merge that instead.
