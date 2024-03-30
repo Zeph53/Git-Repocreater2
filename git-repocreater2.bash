@@ -1205,7 +1205,7 @@ then
   local_repo_email_unchanged="true"
 else
   printf "Local repository email is different from \"$selected_email\". \n"
-  git -C "$HOME/.github/$repo_name.git" config --local user.name "$selected_email"
+  git -C "$HOME/.github/$repo_name.git" config --local user.email "$selected_email"
 fi
 # Tell the user the repository was updated with the new changes
 if
