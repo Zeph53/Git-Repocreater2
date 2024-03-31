@@ -1360,7 +1360,12 @@ do
         current_description="$existing_description"
       fi
     fi
-    printf "Edit the repository description, 350 characters max: \n"
+    if
+      [[ -z "$edit_desc_message_shown" ]]
+    then
+      printf "Edit the repository description. 350 characters max: \n"
+      edit_desc_message_shown="true"
+    fi
     read -r -e -i "$current_description" "edited_description"
     if
       [[ -z "$edited_description" ]]

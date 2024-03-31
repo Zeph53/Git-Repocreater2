@@ -53,7 +53,7 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
-    An author name and email address can now be used when commiting changes, previously used email addresses and author names can be selected using a numbered shortcut, or enter a new author name and email.
+    An author name and email address can now be used when committing changes, previously used email addresses and author names can be selected using a numbered shortcut, or enter a new author name and email.
     Existing repository names are now printed at repository name creation, you can also use the number corresponding with the existing name to use that name instead of creating a new one.
     Removed some internet connection checks for "optimization".
     Corrected issue where creation of repository would fail if there was existing remote origin references in local repository.
