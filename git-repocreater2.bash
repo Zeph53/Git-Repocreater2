@@ -1241,11 +1241,15 @@ then
     [[ -z "$commit_message_commited" ]]
   do
     if
-      [[ -z "$edit_commit_message_shown" ]]
       [[ -z "$commit_message" ]] || 
       [[ -n "$commit_message" ]]
     then
-      printf "Edit the commit message. 50 characters max.\n"
+      if
+        [[ -z "$edit_commit_message_shown" ]]
+      then
+        printf "Edit the commit message. 50 characters max. \n"
+        edit_commit_message_shown="true"
+      fi
       edit_commit_message_shown="true"
       if
         [[ -n "$commit_message" ]]
