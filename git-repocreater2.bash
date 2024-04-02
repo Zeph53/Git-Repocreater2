@@ -100,6 +100,32 @@ check_connection() {
   connected_internet="true"
 }
 #
+## Function to allow the user to confirm their selection with a Yes/No prompt
+confirm_yesno() {
+  while
+    true
+  do
+    printf "$yesno_msg"
+    read -r "yesno_confirm"
+    local yesno_confirm="$(
+      printf "$yesno_confirm" |\
+        tr -d '[:space:]' |\
+          tr -s '[:alnum:]' |\
+            tr '[:upper:]' '[:lower:]'
+    )"
+    case "$yesno_confirm" in
+      ("y"|"yes"|"1")
+        return 0 ;;
+      ("n"|"no"|"0")
+        return 1 ;;
+      ("")
+        continue 1 ;;
+      (*)
+        continue 1 ;;
+    esac
+  done
+}
+#
 ## Disclaimer GNU General Public License v3.0 (gpl-3.0)
 printf \
 'This program comes with ABSOLUTELY NO WARRANTY!\n'
@@ -240,19 +266,13 @@ then
       while
         true
       do
-        printf "Is this correct? Yes/No: "
-        read -r "confirm_repo_name"
-        confirm_repo_name="$(printf "%s" "$confirm_repo_name" | tr '[:upper:]' '[:lower:]')"
+        yesno_msg="Is this correct? Yes/No: "
         if
-          [[ "$confirm_repo_name" == "yes" ]] ||
-          [[ "$confirm_repo_name" == "y" ]]
+          confirm_yesno
         then
           confirm_repo_name="true"
           break 2
-        elif
-          [[ "$confirm_repo_name" == "no" ]] ||
-          [[ "$confirm_repo_name" == "n" ]]
-        then
+        else
           confirm_repo_name="false"
           break 1
         fi
@@ -400,19 +420,13 @@ then
   while
     true
   do
-    printf "Do you want to select/download another license file? Yes/No: "
-    read -r "select_new_license"
-    select_new_license="$(printf "%s" "$select_new_license" | tr '[:upper:]' '[:lower:]')"
+    yesno_msg="Do you want to select/download another license file? Yes/No: "
     if
-      [[ "$select_new_license" == "yes" ]] ||
-      [[ "$select_new_license" == "y" ]]
+      confirm_yesno
     then
       select_new_license_confirmed="true"
       break 1
-    elif
-      [[ "$select_new_license" == "no" ]] ||
-      [[ "$select_new_license" == "n" ]]
-    then
+    else
       select_new_license_confirmed="false"
       break 1
     fi
@@ -448,19 +462,13 @@ do
         while
           true
         do
-          printf "Is this correct? Yes/No: "
-          read -r "confirm_selected_license"
-          confirm_selected_license="$(printf "$confirm_selected_license" | tr '[:upper:]' '[:lower:]')"
+          yesno_msg="Is this correct? Yes/No: "
           if
-            [[ "$confirm_selected_license" == "yes" ]] ||
-            [[ "$confirm_selected_license" == "y" ]]
+            confirm_yesno
           then
             selected_license_confirmed="true"
             break 3
-          elif
-            [[ "$confirm_selected_license" == "no" ]] ||
-            [[ "$confirm_selected_license" == "n" ]]
-          then
+          else
             selected_license_confirmed="false"
             break 1
           fi
@@ -545,19 +553,13 @@ while
   [[ "$lic_file_exists_repo" == "true" ]] &&
   [[ "$license_file_differs" == "true" ]]
 do
-  printf "Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
-  read -r "confirm_copy_license"
-  confirm_copy_license="$(printf "$confirm_copy_license" | tr '[:upper:]' '[:lower:]')"
+  yesno_msg="Would you still like to copy the selected license to \"LICENSE.MD\"? Yes/No: "
   if
-    [[ "$confirm_copy_license" == "yes" ]] ||
-    [[ "$confirm_copy_license" == "y" ]]
+    confirm_yesno
   then
     copy_license_confirmed="true"
     break 1
-  elif
-    [[ "$confirm_copy_license" == "no" ]] ||
-    [[ "$confirm_copy_license" == "n" ]]
-  then
+  else
     copy_license_confirmed="false"
     break 1
   fi
@@ -592,19 +594,13 @@ fi
 while
   [[ "$lic_file_exists_repo" == "true" ]]
 do
-  printf "Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
-  read -r "confirm_edit_license"
-  confirm_edit_license="$(printf "$confirm_edit_license" | tr '[:upper:]' '[:lower:]')"
+  yesno_msg="Would you like to edit the \"LICENSE.MD\" file using Nano text editor? Yes/No: "
   if
-    [[ "$confirm_edit_license" == "yes" ]] ||
-    [[ "$confirm_edit_license" == "y" ]]
+    confirm_yesno
   then
     edit_license_confirmed="true"
     break 1
-  elif
-    [[ "$confirm_edit_license" == "no" ]] ||
-    [[ "$confirm_edit_license" == "n" ]]
-  then
+  else
     edit_license_confirmed="false"
     break 1
   fi
@@ -683,19 +679,13 @@ then
   while
     [[ -z "$create_readme_confirmed" ]]
   do
-    printf "Create an empty \"README.MD\" file in the local repository? Yes/No: "
-    read -r "confirm_create_readme"
-    confirm_create_readme="$(printf "$confirm_create_readme" | tr '[:upper:]' '[:lower:]')"
+    yesno_msg="Create an empty \"README.MD\" file in the local repository? Yes/No: "
     if
-      [[ "$confirm_create_readme" == "yes" ]] ||
-      [[ "$confirm_create_readme" == "y" ]]
+      confirm_yesno
     then
       create_readme_confirmed="true"
       break 1
-    elif
-      [[ "$confirm_create_readme" == "no" ]] ||
-      [[ "$confirm_create_readme" == "n" ]]
-    then
+    else
       create_readme_confirmed="false"
       break 1
     fi
@@ -722,19 +712,13 @@ fi
 while
   [[ "$readme_file_exists_repo" == "true" ]]
 do
-  printf "Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
-  read -r "confirm_edit_readme"
-  confirm_edit_readme="$(printf "$confirm_edit_readme" | tr '[:upper:]' '[:lower:]')"
+  yesno_msg="Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
   if
-    [[ "$confirm_edit_readme" == "yes" ]] ||
-    [[ "$confirm_edit_readme" == "y" ]]
+    confirm_yesno
   then
     edit_readme_confirmed="true"
     break 1
-  elif
-    [[ "$confirm_edit_readme" == "no" ]] ||
-    [[ "$confirm_edit_readme" == "n" ]]
-  then
+  else
     edit_readme_confirmed="false"
     break 1
   fi
@@ -766,7 +750,7 @@ then
     if
       [[ -d "$HOME/.github/$repo_name.git/.git" ]]
     then
-      printf "Initialized local Git repository.\n"
+      printf "Initialized local Git repository \"$HOME/.github/$repo_name\". \n"
       repo_git_init="true"
     fi
   done
@@ -795,6 +779,9 @@ then
     fi
   done
 fi
+#
+#
+#
 #
 ## Selecting an email for the repository
 # Gather all associated emails
@@ -959,19 +946,13 @@ do
   while
     true
   do
-    printf "Is this correct? Yes/No: "
-    read -r "confirm_selected_email_input"
-    confirm_selected_email_input="$(printf "%s" "$confirm_selected_email_input" | tr '[:upper:]' '[:lower:]')"
+    yesno_msg="Is this correct? Yes/No: "
     if
-      [[ "$confirm_selected_email_input" == "yes" ]] ||
-      [[ "$confirm_selected_email_input" == "y" ]]
+      confirm_yesno
     then
       selected_email_input_confirmed="true"
       break 2
-    elif
-      [[ "$confirm_selected_email_input" == "no" ]] ||
-      [[ "$confirm_selected_email_input" == "n" ]]
-    then
+    else
       selected_email_input_confirmed="false"
       email_valid="false"
       break 1
@@ -1148,18 +1129,12 @@ do
       [[ "$username_valid" == "true" ]] &&
       [[ -z "$selected_username_input_confirmed" ]] 
     do
-      printf "Is this correct? Yes/No: "
-      read -r "confirm_selected_username_input"
-      confirm_selected_username_input="$(printf "%s" "$confirm_selected_username_input" | tr '[:upper:]' '[:lower:]')"
+      yesno_msg="Is this correct? Yes/No: "
       if
-        [[ "$confirm_selected_username_input" == "yes" ]] ||
-        [[ "$confirm_selected_username_input" == "y" ]]
+        confirm_yesno
       then
         selected_username_input_confirmed="true"
-      elif
-        [[ "$confirm_selected_username_input" == "no" ]] ||
-        [[ "$confirm_selected_username_input" == "n" ]]
-      then
+      else
         selected_username_input_confirmed="false"
         username_valid="false"
       fi
@@ -1386,19 +1361,13 @@ do
       while
         true
       do
-        printf "Is this correct? Yes/No: "
-        read -r "confirm_edited_description"
-        confirm_edited_description="$(printf "%s" "$confirm_edited_description" | tr '[:upper:]' '[:lower:]')"
+        yesno_msg="Is this correct? Yes/No: "
         if
-          [[ "$confirm_edited_description" == "yes" ]] ||
-          [[ "$confirm_edited_description" == "y" ]]
+          confirm_yesno
         then
           confirm_edited_description="true"
           break 2
-        elif
-          [[ "$confirm_edited_description" == "no" ]] ||
-          [[ "$confirm_edited_description" == "n" ]]
-        then
+        else
           confirm_edited_description="false"
           break 1
         fi
