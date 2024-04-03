@@ -778,30 +778,6 @@ then
     fi
   done
 fi
-# Add files to staging in the local git repository
-if
-  [[ "$repo_git_init" == "true" ]]
-then
-  while
-    [[ -z "$repo_git_added_all" ]]
-  do
-    if
-      git -C "$HOME/.github/$repo_name.git" add -A
-    then
-      status="$(git -C "$HOME/.github/$repo_name.git" status --porcelain)"
-      status_count="$(printf "$status\n" | wc -l)"
-      if
-        [[ "$status_count" -gt 0 ]]
-      then
-        printf "Added "$status_count" files to staging from \"$repo_name.git\".\n"
-      else
-        printf "No files were staged for commit.\n"
-      fi
-      repo_git_added_all="true"
-      break 1
-    fi
-  done
-fi
 #
 #
 #
@@ -1217,6 +1193,138 @@ if
   [[ "$(git -C "$HOME/.github/$repo_name.git" config --local user.email)" == "$selected_email" ]]
 then
   printf "\"$selected_email\" configured with \"$repo_name\"\n"
+fi
+
+
+
+
+
+
+
+
+
+
+# Add README.MD file to staging in the local git repository
+if
+  [[ "$repo_git_init" == "true" ]] &&
+  [[ "$readme_file_exists_repo" == "true" ]] ||
+  [[ "$readme_edited" == "true" ]]
+then
+  while
+    [[ -z "$repo_git_added_readme" ]]
+  do
+    if
+      git -C "$HOME/.github/$repo_name.git" add "README.MD"
+    then
+      status="$(git -C "$HOME/.github/$repo_name.git" status --porcelain)"
+      status_count="$(printf "$status\n" | wc -l)"
+      if
+        [[ "$status_count" -gt 0 ]]
+      then
+        printf "Added "$status_count" files to staging from \"$repo_name.git\".\n"
+      else
+        printf "No files were staged for commit.\n"
+      fi
+      repo_git_added_readme="true"
+      break 1
+    fi
+  done
+fi
+# Request the user to create a custom Git commit message for the README.MD
+if
+  [[ "$readme_edited" == "true" ]]
+then
+  commit_message_template="$(git config --global --get-all commit.template)"
+  if
+    [[ -f "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG" ]]
+  then
+    existing_commit_message="$(printf "Update README.MD")"
+    default_readme_commit_message="$existing_commit_message"
+  elif
+    [[ -n "$commit_message_template" ]]
+  then
+    default_readme_commit_message="$commit_message_template"
+  else
+    default_readme_commit_message="Update README.MD"
+  fi
+  while
+    [[ -z "$readme_commit_message_commited" ]]
+  do
+    if
+      [[ -z "$readme_commit_message" ]] || 
+      [[ -n "$readme_commit_message" ]]
+    then
+      if
+        [[ -z "$edit_readme_commit_message_shown" ]]
+      then
+        printf "Edit the \"README.MD\" commit message. 50 characters max. \n"
+        edit_readme_commit_message_shown="true"
+      fi
+      edit_readme_commit_message_shown="true"
+      if
+        [[ -n "$readme_commit_message" ]]
+      then
+        default_readme_commit_message="$readme_commit_message"
+      fi
+      read -r -e -i "$default_readme_commit_message" "readme_commit_message"
+      if
+        (( "${#readme_commit_message}" >= "1" )) &&
+        (( "${#readme_commit_message}" <= "50" ))
+      then
+        readme_commit_message_commited="true"
+      else
+        printf "\"README.MD\" commit message must be between 1 and 50 characters.\n"
+      fi
+    fi
+  done
+fi
+# Index README.MD from staging to be ready for commit to GitHub
+if
+  [[ "$repo_git_added_readme" == "true" ]] &&
+  [[ "$readme_commit_message_commited" == "true" ]]
+then
+  if
+    ! git -C "$HOME/.github/$repo_name.git" commit --author "$selected_username <$selected_email>" -m "$readme_commit_message" | grep "changed"
+  then
+    printf "There was nothing to commit that wasn't already committed.\n"
+  fi
+  repo_git_commited_readme="true"
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+# Add files to staging in the local git repository
+if
+  [[ "$repo_git_init" == "true" ]]
+then
+  while
+    [[ -z "$repo_git_added_all" ]]
+  do
+    if
+      git -C "$HOME/.github/$repo_name.git" add -A
+    then
+      status="$(git -C "$HOME/.github/$repo_name.git" status --porcelain)"
+      status_count="$(printf "$status\n" | wc -l)"
+      if
+        [[ "$status_count" -gt 0 ]]
+      then
+        printf "Added "$status_count" files to staging from \"$repo_name.git\".\n"
+      else
+        printf "No files were staged for commit.\n"
+      fi
+      repo_git_added_all="true"
+      break 1
+    fi
+  done
 fi
 # Request the user to create a custom Git commit message
 if
