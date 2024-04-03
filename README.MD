@@ -53,6 +53,7 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
+    Added a prompt for a custom commit message for an altered README.MD.
     Replaced "Yes/No:" IF structured confirmation prompts with a single function.
     An author name and email address can now be used when committing changes, previously used email addresses and author names can be selected using a numbered shortcut, or enter a new author name and email.
     Existing repository names are now printed at repository name creation, you can also use the number corresponding with the existing name to use that name instead of creating a new one.

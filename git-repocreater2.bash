@@ -728,10 +728,33 @@ if
   [[ "$edit_readme_confirmed" == "true" ]]
 then
   while
-    [[ -z "$readme_edited" ]]
+    [[ -z "$readme_edited" ]] ||
+    [[ "$readme_edited" == "false" ]]
   do
+    original_content="$(<"$HOME/.github/$repo_name.git/README.MD")"
     nano -E -Y markdown -S -a -i -l -m -q "$HOME/.github/$repo_name.git/README.MD"
-    readme_edited="true"
+    edited_content="$(<"$HOME/.github/$repo_name.git/README.MD")"
+    if 
+    [[ "$original_content" != "$edited_content" ]]
+    then
+      printf "\"README.MD\" was modified and saved. \n"
+      readme_edited="true"
+    else
+      readme_edited="false"
+    fi
+    if
+      [[ "$readme_edited" == "false" ]]
+    then
+      yesno_msg="\"README.MD\" was not saved, open again? Yes/No: "
+      if
+        confirm_yesno
+      then
+        continue 1
+      else
+        readme_edited="true"
+        break 1
+      fi
+    fi
   done
 fi
 #
