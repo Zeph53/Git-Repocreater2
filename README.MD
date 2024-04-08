@@ -53,7 +53,6 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
-    Added a check for the newest README.MD. Now the user can edit the README.MD on GitHub through a web browser as well as locally through a text editor and the script will synchronize the file....
     Added a default custom commit message for README.MD.
     Added a prompt for a custom commit message for an altered README.MD.
     Replaced "Yes/No:" IF structured confirmation prompts with a single function.
@@ -78,6 +77,7 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
+    A way to synchronize README.MD files according to the most recently edited one. Currently testing feature, over and over..
     Will need to clean up numbered selector for existing repository names.
     Add many debug messages, such as error codes.
     Check to see if README.MD was updated via GitHub, download/merge that instead.
