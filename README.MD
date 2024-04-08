@@ -53,7 +53,8 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
-    Added a default custom commit messgae for README.MD.
+    Added a check for the newest README.MD. Now the user can edit the README.MD on GitHub through a web browser as well as locally through a text editor.
+    Added a default custom commit message for README.MD.
     Added a prompt for a custom commit message for an altered README.MD.
     Replaced "Yes/No:" IF structured confirmation prompts with a single function.
     An author name and email address can now be used when committing changes, previously used email addresses and author names can be selected using a numbered shortcut, or enter a new author name and email.
