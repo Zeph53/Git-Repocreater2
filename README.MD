@@ -53,7 +53,7 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
-    README.MD file synchronization between the GitHub repository, the local repository, and the currently committed file.
+    Automatic README.MD file synchronization between the GitHub repository, the local repository, and the currently committed file.
     Added a default custom commit message for README.MD.
     Added a prompt for a custom commit message for an altered README.MD.
     Replaced "Yes/No:" IF structured confirmation prompts with a single function.
