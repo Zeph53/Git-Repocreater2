@@ -77,7 +77,6 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
-    test
     Automatically synchronizing the most recently edited README.MD with the local README.MD, the committed README.MD, and the README.MD on GitHub.
     Will need to clean up numbered selector for existing repository names.
     Add many debug messages, such as error codes.
