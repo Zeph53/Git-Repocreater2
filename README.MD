@@ -1,4 +1,4 @@
-# Git-Repocreater2  
+ocreater2  
 This is a Bourne Again Shell (.bash) script that automates various actions regarding repository generation on GitHub using GIT and GH (GitHub CLI). It's a work in progress but near full functionality is available.  
 
 Creating repositories on GitHub of random files and directories has never been easier or faster!  
@@ -77,7 +77,7 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
-  Automatically synchronizing the most recently edited README.MD with the local README.MD, the committed README.MD, and the README.MD on GitHub. Almost done.
+    Automatically synchronizing the most recently edited README.MD with the local README.MD, the committed README.MD, and the README.MD on GitHub. Almost done.
     Will need to clean up numbered selector for existing repository names.
     Add many debug messages, such as error codes.
     Check to see if README.MD was updated via GitHub, download/merge that instead.
