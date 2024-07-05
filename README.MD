@@ -19,7 +19,8 @@ Please report any bugs.
     Automatically copying LICENSE.MD templates to staging directory.
     Creating new README.MD files.
     Automatically checking for existing LICENSE.MD and README.MD files from GitHub, downloading them instead.
-    Manually editing LICENSE.MD and README.MD files currently set for staging with NANO.
+    Automatically synchronizing the most recently edited README.MD between the local README.MD, the committed README.MD, and the remote README.MD on GitHub.
+    Manually editing LICENSE.MD and README.MD files currently set for staging with seamlessly with NANO.
     Automatically initiating local repository and indexing all files from staging directory.
     Creating or selecting a Git commit author name and email address.
     Creating a custom Git commit message.
@@ -53,6 +54,7 @@ Simply execute the script with the file or directory that you would like to turn
     git-repocreater2.bash --help  
 
 ## Updates  
+    Automatically synchronizing the most recently edited README.MD between the local README.MD, the committed README.MD, and the remote README.MD on GitHub.
     Added a default custom commit message for README.MD.
     Added a prompt for a custom commit message for an altered README.MD.
     Replaced "Yes/No:" IF structured confirmation prompts with a single function.
@@ -77,7 +79,7 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
-    Automatically synchronizing the most recently edited README.MD with the local README.MD, the committed README.MD, and the README.MD on GitHub. Almost done. Attempting to merge with Git-Repocreater2.bash
+    README.MD sync echoing is kinda spammy.
     Will need to clean up numbered selector for existing repository names.
     Add many debug messages, such as error codes.
     Check to see if README.MD was updated via GitHub, download/merge that instead.
