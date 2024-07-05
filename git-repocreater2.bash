@@ -65,8 +65,17 @@ then
   exit 1
 fi
 #
-## Function to check to see if still connected to the internet,
-## or at least to github.com
+## Disclaimer GNU General Public License v3.0 (gpl-3.0)
+printf \
+'This program comes with ABSOLUTELY NO WARRANTY!\n'
+printf \
+'This is free software, and you are welcome to redistribute it under certain conditions.\n'
+#
+#
+#
+#
+#
+## Function to check connection to GitHub
 check_connection() {
   if
     [[ "$connected_internet" == "true" ]]
@@ -125,56 +134,67 @@ confirm_yesno() {
     esac
   done
 }
-#
-## Disclaimer GNU General Public License v3.0 (gpl-3.0)
-printf \
-'This program comes with ABSOLUTELY NO WARRANTY!\n'
-printf \
-'This is free software, and you are welcome to redistribute it under certain conditions.\n'
-#
-#
-#
-#
-## Logging into GitHub using GH
-# Check if user is logged in, or log in
-if
-  [[ -z "$connected_internet" ]]
-then
-  check_connection
-fi
-if
-  [[ "$connected_internet" == "true" ]] &&
-  ! gh auth status &> /dev/null
-then
-  printf "You are not authenticated with GitHub.\n"  
-  while
-    true
-  do
-    read -r -e -p "GitHub Personal Access Token: " "gh_pat"
+# Function to check if logged in to GitHub and then prompt to login
+check_for_login() {
+  if
+    check_connection
+  then
     if
-      [[ -z "$gh_pat" ]]
+      [[ "$authenticated" == "true" ]]
     then
-      printf "Token cannot be empty.\n"
-      unset "gh_pat"
+      printf "You seem to be already authenticated with GitHub. \n"
     else
-      if
-        ! printf "$gh_pat" | gh auth login --with-token &> /dev/null
-      then
-        printf "Failed to authenticate with GitHub. Please try again.\n"
-        unset "gh_pat"
-      else
-        printf "Successfully authenticated with GitHub.\n"
-        unset "gh_pat"
-        gh config set git_protocol https &> /dev/null
-        gh auth setup-git &> /dev/null
-        break 1
-      fi
+      while
+        [[ "$authenticated" == "false" ]] ||
+        [[ -z "$authenticated" ]]
+      do
+        auth_status="$(gh auth status 2>&1)"
+        if
+          printf "$auth_status" | grep -q "Failed to log in" ||
+          printf "$auth_status" | grep -q "not logged into"
+        then
+          printf "You are not authenticated with GitHub. \n"
+          authenticated="false"
+          read -r -e -p "GitHub Personal Access Token: " "gh_pat"
+          if
+            [[ -z "$gh_pat" ]]
+          then
+            printf "Token cannot be empty. \n"
+            unset gh_pat
+          else
+            if
+              printf "$gh_pat" | gh auth login --with-token &> /dev/null
+            then
+              printf "Successfully authenticated with GitHub.\n"
+              authenticated="true"
+              unset gh_pat
+              gh config set git_protocol https &> /dev/null
+              gh auth setup-git &> /dev/null
+            else
+              printf "Failed to authenticate with GitHub. Please try again.\n"
+              unset gh_pat
+            fi
+          fi
+        elif
+          printf "$auth_status" | grep -q "Logged in to"
+        then
+          printf "You seem to be already authenticated with GitHub. \n"
+          authenticated="true"
+        fi
+      done
     fi
-  done
-else
-  printf "You are already authenticated with GitHub.\n"
+  fi
+}
+#
+## Using functions to check for connection and authentication to GitHub
+if
+  check_connection
+  check_for_login
+then
+  true
 fi
-# Generating a .netrc file with an access token in it
+#
+## Generating a .netrc file with an access token in it, seems to be not needed now
 #
 #
 #
@@ -190,7 +210,7 @@ then
   do
     if
       [[ -z "$repo_names_remote_listed" ]] &&
-      check_connection
+      [[ "$(check_connection && check_for_login)" ]]
     then
       repo_names_remote_list="$(gh repo list)"
       repo_names_remote_list_numbered=""
@@ -378,7 +398,7 @@ if
 then
   lic_file_github_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/LICENSE.MD"
   if
-    check_connection
+    [[ "$(check_connection && check_for_login)" ]]
   then
     if
       wget --spider "$lic_file_github_url" &> /dev/null
@@ -400,7 +420,7 @@ then
     [[ -z "$lic_file_github_url_wget" ]]
   do
     if
-      check_connection
+      [[ "$(check_connection && check_for_login)" ]]
     then
       wget --quiet "$lic_file_github_url" -O "$HOME/.github/$repo_name.git/LICENSE.MD"
       if
@@ -518,7 +538,7 @@ then
       ! [[ -f "$license_file_path" ]]
     do
       if
-        check_connection
+        [[ "$(check_connection && check_for_login)" ]]
       then
         printf "Downloading.\n"
         wget --quiet "$license_file_url" -O "$license_file_path"
@@ -620,147 +640,6 @@ fi
 #
 #
 #
-## Creating a README.MD file
-# Check for existing readme.md in repo
-if
-  [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
-then
-  printf "\"README.MD\" exists inside of \"$repo_name.git/README.MD\".\n"
-  readme_file_exists_repo="true"
-else
-  printf "\"README.MD\" does not exist inside of \"$repo_name.git/README.MD\".\n"
-fi
-# If not existing in repo, check to see if readme.md exists on GitHub
-if
-  [[ -z "$readme_file_exists_repo" ]]
-then
-  readme_file_url="https://raw.githubusercontent.com/$git_username/$repo_name/master/README.MD"
-  if
-    check_connection
-  then
-    if
-      wget --spider "$readme_file_url" &> /dev/null
-    then
-      printf "\"README.MD\" does exists on the \"$readme_file_url\".\n"
-      readme_file_exist_url="true"
-    else
-      printf "\"README.MD\" does not exist at \"$readme_file_url\".\n"
-    fi
-  fi
-fi
-# When the readme.md exists on GitHub and not in the local repository, download it
-if
-  [[ "$readme_file_exist_url" == "true" ]] &&
-  [[ -z "$readme_file_exists_repo" ]]
-then
-  printf "Downloading existing \"README.MD\" from \"$readme_file_url\".\n"
-  while
-    [[ -z "$readme_file_url_wget" ]]
-  do
-    if
-      check_connection
-    then
-      wget --quiet "$readme_file_url" -O "$HOME/.github/$repo_name.git/README.MD"
-      if
-        [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
-      then
-        printf "Existing \"README.MD\" downloaded from \"$readme_file_url\".\n"
-        readme_file_url_wget="true"
-      fi
-    fi
-  done
-fi
-# When the readme.md doesn't exist on the local repo or the GitHub repo ask to create one
-if
-  [[ -z "$readme_file_exists_repo" ]] &&
-  [[ -z "$readme_file_exists_url" ]] &&
-  [[ -z "$readme_file_url_wget" ]]
-then
-  while
-    [[ -z "$create_readme_confirmed" ]]
-  do
-    yesno_msg="Create an empty \"README.MD\" file in the local repository? Yes/No: "
-    if
-      confirm_yesno
-    then
-      create_readme_confirmed="true"
-      break 1
-    else
-      create_readme_confirmed="false"
-      break 1
-    fi
-  done
-fi
-# After confirmation, create a blank readme.md file with the repo name in it
-if
-  [[ "$create_readme_confirmed" == "true" ]]
-then
-  while
-    [[ -z "$readme_file_exists_repo" ]]
-  do
-    touch "$HOME/.github/$repo_name.git/README.MD"
-    printf "# $repo_name\n" > "$HOME/.github/$repo_name.git/README.MD"
-    if
-      [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
-    then
-      printf "\"README.MD\" file successfully created.\n"
-      readme_file_exists_repo="true"
-    fi
-  done
-fi
-# Confirm to edit the readme.md in repo with nano
-while
-  [[ "$readme_file_exists_repo" == "true" ]]
-do
-  yesno_msg="Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
-  if
-    confirm_yesno
-  then
-    edit_readme_confirmed="true"
-    break 1
-  else
-    edit_readme_confirmed="false"
-    break 1
-  fi
-done
-# Open readme.md in repo with nano after confirmation
-if
-  [[ "$edit_readme_confirmed" == "true" ]]
-then
-  while
-    [[ -z "$readme_edited" ]] ||
-    [[ "$readme_edited" == "false" ]]
-  do
-    original_content="$(<"$HOME/.github/$repo_name.git/README.MD")"
-    nano -E -Y markdown -S -a -i -l -m -q "$HOME/.github/$repo_name.git/README.MD"
-    edited_content="$(<"$HOME/.github/$repo_name.git/README.MD")"
-    if 
-    [[ "$original_content" != "$edited_content" ]]
-    then
-      printf "\"README.MD\" was modified and saved. \n"
-      readme_edited="true"
-    else
-      readme_edited="false"
-    fi
-    if
-      [[ "$readme_edited" == "false" ]]
-    then
-      yesno_msg="\"README.MD\" was not saved, open again? Yes/No: "
-      if
-        confirm_yesno
-      then
-        continue 1
-      else
-        readme_edited="true"
-        break 1
-      fi
-    fi
-  done
-fi
-#
-#
-#
-#
 ## Creating the remote git repository on GitHub
 # Initialize a local git repository
 if
@@ -788,7 +667,7 @@ while
   [[ -z "$public_events_data" ]]
 do
   if
-    check_connection
+    [[ "$(check_connection && check_for_login)" ]]
   then
     public_events_data="$(curl -s "https://api.github.com/users/$git_username/events/public")"
   fi
@@ -1194,115 +1073,511 @@ if
 then
   printf "\"$selected_email\" configured with \"$repo_name\"\n"
 fi
-
-
-
-
-
-
-
-
-
-
-# Add README.MD file to staging in the local git repository
+#
+#
+#
+#
+## Creating a README.MD file (needed username and email????)
+readme_file_apiurl="https://api.github.com/repos/$git_username/$repo_name/commits?path=README.MD"
+readme_file_rawurl="https://raw.githubusercontent.com/$git_username/$repo_name/master/README.MD"
+readme_file_contenturl="https://api.github.com/repos/$git_username/$repo_name/contents/README.MD"
+## Confirming connection and authentication
 if
-  [[ "$repo_git_init" == "true" ]] &&
-  [[ "$readme_file_exists_repo" == "true" ]] ||
-  [[ "$readme_edited" == "true" ]]
+  check_connection
+  check_for_login
 then
+  true
+fi
+# Function to update list of hashes and timestamps of local README.MD file
+gather_local_readme_hashtime() {
+  if
+    local_readme_time="$(date -u -d @"$(stat --format="%Y" "$HOME/.github/$repo_name.git/README.MD")" +"%s")"
+    local_readme_checksum="$(git -C "$HOME/.github/$repo_name.git" hash-object "$HOME/.github/$repo_name.git/README.MD" | cut -d ' ' -f 1)"
+  then
+    if
+      [[ -n "$local_readme_time" ]] &&
+      [[ -n "$local_readme_checksum" ]]
+    then
+      printf "$local_readme_time - $local_readme_checksum - Local \"README.MD\". \n"
+    else
+      printf "Could not determine timestamp and hash of local \"README.MD\". \n"
+    fi
+  fi
+}
+# Function to update list of hashes and timestamps of committed README.MD file
+gather_commit_readme_hashtime() {
+  if
+    committed_readme_time="$(date -u -d @"$(git -C "$HOME/.github/$repo_name.git" log -1 --format=%at -- "README.MD")" "+%s")"
+    committed_readme_checksum="$(git -C "$HOME/.github/$repo_name.git" ls-tree HEAD README.MD | awk '{print $3}')"
+  then
+    if
+      [[ -n "$committed_readme_time" ]] &&
+      [[ -n "$committed_readme_checksum" ]]
+    then
+      printf "$committed_readme_time - $committed_readme_checksum - Commit \"README.MD\". \n"
+    else
+      printf "Could not determine timestamp and hash of committed \"README.MD\". \n"
+    fi
+  fi
+}
+# Function to update list of hashes and timestamps of remote README.MD file
+gather_remote_readme_hashtime() {
+  if
+    check_connection
+  then
+    if
+      github_readme_time="$(date -u -d "$(curl -s "$readme_file_apiurl" | awk -F '["]' '/"date":/ {print $4; exit}')" "+%s")"
+      github_readme_checksum="$(curl -sL "$readme_file_contenturl" | grep -o '"sha": "[^"]*' | cut -d'"' -f4)"
+    then
+      if
+        [[ -n "$github_readme_time" ]] &&
+        [[ -n "$github_readme_checksum" ]]
+      then
+        printf "$github_readme_time - $github_readme_checksum - Remote \"README.MD\". \n"
+      else
+        printf "Could not determine timestamp and hash of remote \"README.MD\". \n"
+      fi
+    fi
+  fi
+}
+# Function to add and commit the local README.MD file to the repository
+commit_local_readme() {
   while
-    [[ -z "$repo_git_added_readme" ]]
+    [[ -z "$local_readme_added" ]]
   do
     if
-      git -C "$HOME/.github/$repo_name.git" add "README.MD"
+      git -C "$HOME/.github/$repo_name.git" add --force "$HOME/.github/$repo_name.git/README.MD" &> /dev/null
     then
       status="$(git -C "$HOME/.github/$repo_name.git" status --porcelain)"
       status_count="$(printf "$status\n" | wc -l)"
       if
         [[ "$status_count" -gt 0 ]]
       then
-        printf "Added "$status_count" files to staging from \"$repo_name.git\".\n"
-      else
-        printf "No files were staged for commit.\n"
+        printf "Added "$status_count" file for commit to staging from \"$repo_name.git\". \n"
+        local_readme_added="true"
       fi
-      repo_git_added_readme="true"
+    fi
+  done
+  # Request the user to create a custom Git commit message for the README.MD
+  if
+    [[ "$local_readme_added" == "true" ]]
+  then
+    commit_message_template="$(git config --global --get-all commit.template)"
+    if
+      [[ -n "$commit_message_template" ]]
+    then
+      default_readme_commit_message="$commit_message_template"
+    else
+      default_readme_commit_message="Update README.MD"
+    fi
+    while
+      [[ -z "$readme_commit_message_committed_confirmed" ]]
+    do
+      if
+        [[ -z "$readme_commit_message" ]] ||
+        [[ -n "$readme_commit_message" ]]
+      then
+        if
+          [[ -z "$edit_readme_commit_message_shown" ]]
+        then
+          printf "Edit the \"README.MD\" commit message. 50 characters max. \n"
+          edit_readme_commit_message_shown="true"
+        fi
+        edit_readme_commit_message_shown="true"
+        if
+          [[ -n "$readme_commit_message" ]]
+        then
+          default_readme_commit_message="$readme_commit_message"
+        fi
+        read -r -e -i "$default_readme_commit_message" "readme_commit_message"
+        if
+          (( "${#readme_commit_message}" >= "1" )) &&
+          (( "${#readme_commit_message}" <= "50" ))
+        then
+          readme_commit_message_committed="true"
+        else
+          printf "\"README.MD\" commit message must be between 1 and 50 characters. \n"
+          readme_commit_message_committed="false"
+        fi
+      fi
+      if
+        [[ "$readme_commit_message_committed" == "true" ]]
+      then
+        yesno_msg="Is this correct? Yes/No: "
+        if
+          confirm_yesno
+        then
+          readme_commit_message_committed_confirmed="true"
+        fi
+      fi
+    done
+  fi
+  # Index README.MD from staging to be ready for commit to GitHub
+  if
+    [[ "$readme_commit_message_committed_confirmed" == "true" ]]
+  then
+    printf "Committing new \"README.MD\". \n"
+    if
+      ! git -C "$HOME/.github/$repo_name.git" commit --only "$HOME/.github/$repo_name.git/README.MD" --author "$selected_username <$selected_email>" -m "$readme_commit_message" &> /dev/null
+    then
+      printf "There was nothing to commit that wasn't already committed.\n"
+      repo_git_committed_readme="false"
+    else
+      printf "\"README.MD\" file was committed to the staging area. \n"
+      repo_git_committed_readme="true"
+    fi
+  fi
+}
+# Function to find the most recently edited README.MD file
+get_most_recent_readme() {
+  if
+    gather_local_readme_hashtime &&
+    gather_commit_readme_hashtime &&
+    gather_remote_readme_hashtime
+  then
+    if
+      [[ "$local_readme_checksum" != "$committed_readme_checksum" ]] &&
+      [[ "$local_readme_time" -gt "$committed_readme_time" ]]
+    then
+      printf "Local README.MD has a different checksum and more recent timestamp than committed. \n"
+      local_readme_newer_than_commit="true"
+    elif
+      [[ "$local_readme_checksum" != "$committed_readme_checksum" ]] &&
+      [[ "$local_readme_time" -lt "$committed_readme_time" ]]
+    then
+      printf "Local README.MD has a different checksum and an older timestamp than committed. \n"
+      local_readme_older_than_commit="true"
+    elif
+      [[ "$local_readme_checksum" == "$committed_readme_checksum" ]]
+    then
+      printf "Local README.MD has the same checksum as what's currently committed. \n"
+      local_readme_same_as_commit="true"
+    fi
+    if
+      [[ "$committed_readme_checksum" != "$github_readme_checksum" ]] &&
+      [[ "$committed_readme_time" -gt "$github_readme_time" ]]
+    then
+      printf "Committed README.MD has a different checksum and more recent timestamp than on GitHub. \n"
+      committed_readme_newer_than_github="true"
+    elif
+      [[ "$committed_readme_checksum" != "$github_readme_checksum" ]] &&
+      [[ "$committed_readme_time" -lt "$github_readme_time" ]]
+    then
+      printf "Committed README.MD has a different checksum and an older timestamp than on GitHub. \n"
+      committed_readme_older_than_github="true"
+    elif
+      [[ "$committed_readme_checksum" == "$github_readme_checksum" ]]
+    then
+      printf "Committed README.MD has the same checksum as what's currently on GitHub. \n"
+      committed_readme_same_as_github="true"
+    fi
+    if
+      [[ "$local_readme_checksum" == "$committed_readme_checksum" ]] &&
+      [[ "$local_readme_checksum" == "$github_readme_checksum" ]] &&
+      [[ "$committed_readme_checksum" == "$github_readme_checksum" ]]
+    then 
+      printf "\"README.MD\" file is synchronized. \n"
+      local_committed_remote_readme_sync="true"
+    else  
+      sorted="$(printf "%s\n" "$local_readme_time" "$committed_readme_time" "$github_readme_time" | sort -rn | head -n 1)"
+      if
+        [[ "$sorted" == "$local_readme_time" ]]
+      then
+        most_recent_readme="Local README.MD"
+      elif
+        [[ "$sorted" == "$committed_readme_time" ]]
+      then
+        most_recent_readme="Committed README.MD"
+      else
+        most_recent_readme="Remote README.MD"
+      fi
+      printf "%s is currently the most recent version of the file. \n" "$most_recent_readme"
+    fi
+  fi
+}
+# Function to check for readme.md existing in repo
+check_local_readme_exists() {
+  if
+    [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+  then
+    printf "\"README.MD\" does exist inside of \"$repo_name.git/README.MD\".\n"
+    readme_file_exists_repo="true"
+  else
+    printf "\"README.MD\" does not exist inside of \"$repo_name.git/README.MD\".\n"
+    readme_file_exists_repo="false"
+  fi
+}
+# Function to check for readme.md existing on GitHub
+check_remote_readme_exists() {
+  if
+    [[ "$(check_connection && check_for_login)" ]]
+  then
+    if
+      wget --spider "$readme_file_rawurl" &> /dev/null
+    then
+      printf "\"README.MD\" does exist at \"$readme_file_rawurl\".\n"
+      readme_file_exists_url="true"
+    else
+      printf "\"README.MD\" does not exist at \"$readme_file_rawurl\".\n"
+      readme_file_exists_url="false"
+    fi
+  fi
+}
+# Check to see if README.MD file exists locally or remotely 
+if
+  check_local_readme_exists
+  check_remote_readme_exists
+then
+  get_most_recent_readme
+fi
+# When the readme.md exists on GitHub and not in the local repository, download it
+if
+  [[ "$readme_file_exists_url" == "true" ]] &&
+  [[ "$readme_file_exists_repo" == "false" ]]
+then
+  printf "Downloading existing \"README.MD\" from \"$readme_file_rawurl\".\n"
+  while
+    [[ -z "$readme_file_rawurl_wget" ]]
+  do
+    if
+      [[ "$(check_connection && check_for_login)" ]]
+    then
+      wget --quiet "$readme_file_rawurl" -O "$HOME/.github/$repo_name.git/README.MD"
+      if
+        [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+      then
+        printf "Existing \"README.MD\" downloaded from \"$readme_file_rawurl\". \n"
+        readme_file_rawurl_wget="true"
+        readme_file_exists_repo="true"
+      else
+        readme_file_exists_repo="false"
+      fi
+    fi
+  done
+fi
+# When the readme.md doesn't exist on the local repo or the GitHub repo ask to create one
+if
+  [[ "$readme_file_exists_repo" == "false" ]] &&
+  [[ "$readme_file_exists_url" == "false" ]]
+then
+  while
+    [[ -z "$create_readme_confirmed" ]]
+  do
+    yesno_msg="Create an empty \"README.MD\" file in the local repository? Yes/No: "
+    if
+      confirm_yesno
+    then
+      create_readme_confirmed="true"
+      break 1
+    else
+      create_readme_confirmed="false"
       break 1
     fi
   done
 fi
-# Request the user to create a custom Git commit message for the README.MD
+# After confirmation, create a blank readme.md file with the repo name in it
 if
+  [[ "$create_readme_confirmed" == "true" ]]
+then
+  while
+    [[ -z "$readme_file_exists_repo" ]] ||
+    [[ "$readme_file_exists_repo" == "false" ]]
+  do
+    touch "$HOME/.github/$repo_name.git/README.MD"
+    printf "# $repo_name\n" > "$HOME/.github/$repo_name.git/README.MD"
+    if
+      [[ -f "$HOME/.github/$repo_name.git/README.MD" ]]
+    then
+      printf "\"README.MD\" file successfully created.\n"
+      readme_file_exists_repo="true"
+    fi
+  done
+fi
+# Function to prompt the user to edit the local README.MD file
+edit_local_readme() {
+  while
+    [[ "$readme_file_exists_repo" == "true" ]]
+  do
+    yesno_msg="Would you like to edit the \"README.MD\" file using Nano text editor? Yes/No: "
+    if
+      confirm_yesno
+    then
+      edit_readme_confirmed="true"
+      break 1
+    else
+      edit_readme_confirmed="false"
+      break 1
+    fi
+  done
+  if
+    [[ "$edit_readme_confirmed" == "true" ]]
+  then
+    while
+      [[ -z "$readme_edited" ]] ||
+      [[ "$readme_edited" == "false" ]]
+    do
+      original_content="$(<"$HOME/.github/$repo_name.git/README.MD")"
+      nano -E -Y markdown -S -a -i -l -m -q "$HOME/.github/$repo_name.git/README.MD"
+      edited_content="$(<"$HOME/.github/$repo_name.git/README.MD")"
+      if 
+        [[ "$original_content" != "$edited_content" ]]
+      then
+        printf "\"README.MD\" was modified and saved. \n"
+        readme_edited="true"
+      else
+        readme_edited="false"
+      fi
+      if
+        [[ "$readme_edited" == "false" ]]
+      then
+        yesno_msg="\"README.MD\" was not saved, open again? Yes/No: "
+        if
+          confirm_yesno
+        then
+          continue 1
+        else
+          break 1
+        fi
+      fi
+    done
+  fi
+}
+# Request the user to edit the README.MD file
+if
+  [[ "$readme_file_exists_repo" == "true" ]] &&
+  ! [[ "$most_recent_readme" == "Remote README.MD" ]]
+then
+  edit_local_readme
+fi
+# Synchronizing committed README.MD file with the one that is currently on GitHub
+if
+  [[ "$readme_file_exists_repo" == "true" ]] &&
+  [[ "$readme_file_exists_url" == "true" ]]
+then
+  get_most_recent_readme
+fi
+# Prompt the user to download the new README.MD
+if
+  [[ "$committed_readme_older_than_github" == "true" ]] ||
+  [[ "$local_readme_older_than_github" == "true" ]]
+then
+  yesno_msg="Download the more recent \"README.MD\" from the Github repository? Yes/No: "
+  if
+    confirm_yesno
+  then
+    github_readme_download_confirmed="true"
+  fi
+fi
+# Download the README.MD from the existing GitHub repository
+if
+  [[ "$github_readme_download_confirmed" == "true" ]]
+then
+  if
+    check_connection
+  then
+    if
+      curl -s --remote-time -o "$HOME/.github/$repo_name.git/README.MD" "$readme_file_rawurl"
+    then
+      printf "\"README.MD\" downloaded from github. \n"
+      local_readme_was_downloaded="true"
+      readme_file_exists_repo="true"
+    else
+      printf "\"README.MD\" not downloaded from github. \n"
+    fi
+  fi
+fi
+# Request the user to edit the README.MD file
+if
+  [[ "$local_readme_was_downloaded" == "true" ]]
+then
+  edit_local_readme
+fi
+# Synchronizing local README.MD file with the one that is currently committed
+if
+  [[ "$local_readme_newer_than_commit" == "true" ]] ||
+  [[ "$local_readme_was_downloaded" == "true" ]] ||
   [[ "$readme_edited" == "true" ]]
 then
-  commit_message_template="$(git config --global --get-all commit.template)"
-  if
-    [[ -f "$HOME/.github/$repo_name.git/.git/COMMIT_EDITMSG" ]]
-  then
-    existing_commit_message="$(printf "Update README.MD")"
-    default_readme_commit_message="$existing_commit_message"
-  elif
-    [[ -n "$commit_message_template" ]]
-  then
-    default_readme_commit_message="$commit_message_template"
-  else
-    default_readme_commit_message="Update README.MD"
-  fi
+  printf "Committing local \"README.MD\". \n"
   while
-    [[ -z "$readme_commit_message_commited" ]]
+    [[ -z "$local_readme_committed" ]]
   do
     if
-      [[ -z "$readme_commit_message" ]] || 
-      [[ -n "$readme_commit_message" ]]
+      old_committed_readme_checksum="$committed_readme_checksum"
     then
+      commit_local_readme 
       if
-        [[ -z "$edit_readme_commit_message_shown" ]]
+        [[ "$repo_git_committed_readme" == "true" ]]
       then
-        printf "Edit the \"README.MD\" commit message. 50 characters max. \n"
-        edit_readme_commit_message_shown="true"
-      fi
-      edit_readme_commit_message_shown="true"
-      if
-        [[ -n "$readme_commit_message" ]]
-      then
-        default_readme_commit_message="$readme_commit_message"
-      fi
-      read -r -e -i "$default_readme_commit_message" "readme_commit_message"
-      if
-        (( "${#readme_commit_message}" >= "1" )) &&
-        (( "${#readme_commit_message}" <= "50" ))
-      then
-        readme_commit_message_commited="true"
-      else
-        printf "\"README.MD\" commit message must be between 1 and 50 characters.\n"
+        while
+          [[ "$committed_readme_checksum" == "$old_committed_readme_checksum" ]]
+        do
+          #printf "$committed_readme_checksum\n"
+          if
+            get_most_recent_readme &> /dev/null
+          then
+            #printf "$committed_readme_checksum\n"
+            local_readme_committed="true"
+            sleep 1
+          fi
+        done
       fi
     fi
   done
 fi
-# Index README.MD from staging to be ready for commit to GitHub
+# Push the more recent local README.MD to GitHub.
 if
-  [[ "$repo_git_added_readme" == "true" ]] &&
-  [[ "$readme_commit_message_commited" == "true" ]]
+  [[ -z "$local_readme_was_downloaded" ]] &&
+  [[ -z "$local_committed_remote_readme_sync" ]] ||
+  [[ "$readme_edited" == "true" ]]
 then
   if
-    ! git -C "$HOME/.github/$repo_name.git" commit --author "$selected_username <$selected_email>" -m "$readme_commit_message" | grep "changed"
+    [[ "$local_readme_committed" == "true" ]] ||
+    [[ "$committed_readme_newer_than_github" == "true" ]]
   then
-    printf "There was nothing to commit that wasn't already committed.\n"
+    if
+      check_connection
+    then
+      printf "Pushing \"README.MD\" to \"$git_repo_url\". \n"
+      if
+        git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" HEAD:master &> /dev/null
+      then
+        printf "Pushed \"README.MD\" to \"$git_repo_url\". \n"
+        git_repo_readme_pushed="true"
+      fi
+    fi
   fi
-  repo_git_commited_readme="true"
 fi
-
-
-
-
-
-
-
-
-
-
-
-
-# Add files to staging in the local git repository
+if
+  [[ "$git_repo_readme_pushed" == "true" ]]
+then
+  printf "Waiting for changes to appear on GitHub. \n"
+  old_github_readme_checksum="$github_readme_checksum"
+  while
+    [[ "$github_readme_checksum" == "$old_github_readme_checksum" ]]
+  do
+    printf "$github_readme_checksum\n"
+    if
+      gather_remote_readme_hashtime &> /dev/null
+    then
+      printf "$github_readme_checksum\n"
+      sleep 2
+    fi
+  done
+  git_repo_readme_pushed_confirmed="true"
+fi
+if
+  [[ "$git_repo_readme_pushed_confirmed" == "true" ]] ||
+  [[ "$local_readme_committed" == "true" ]]
+then
+  get_most_recent_readme
+  printf "\n"
+fi
+#
+#
+#
+#
+# Adding all files to staging in the local git repository
 if
   [[ "$repo_git_init" == "true" ]]
 then
@@ -1392,7 +1667,7 @@ if
 then
   git_repo_url="https://github.com/$git_username/$repo_name"
   if
-    check_connection
+    [[ "$(check_connection && check_for_login)" ]]
   then
     if
       gh repo view "$git_username/$repo_name" --json name &> /dev/null
@@ -1421,7 +1696,7 @@ then
       git -C "$HOME/.github/$repo_name.git" remote remove origin &> /dev/null
     fi
     if
-      check_connection
+      [[ "$(check_connection && check_for_login)" ]]
     then
       if
         gh repo create "$repo_name" --source "$HOME/.github/$repo_name.git" --public &> /dev/null
@@ -1452,7 +1727,7 @@ do
       [[ -z "$edited_description_empty" ]]
     then
       if
-        check_connection
+        [[ "$(check_connection && check_for_login)" ]]
       then
         existing_description="$(gh repo view "$git_username/$repo_name" --json "description" | awk -F '"' '{print $4}')"
       fi
@@ -1524,7 +1799,7 @@ then
       [[ -z "$description_uploaded" ]]
     do
       if
-        check_connection
+        [[ "$(check_connection && check_for_login)" ]]
       then
         if
           gh repo edit "$git_username/$repo_name" --description "$edited_description" &> /dev/null
@@ -1547,7 +1822,7 @@ if
   [[ "$confirm_edited_description" == "true" ]]
 then
   printf "Checking GitHub for the latest commit hash.\n"
-  previous_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse origin/master)"
+  previous_commit="$(git -C "$HOME/.github/$repo_name.git" rev-parse origin/master &> /dev/null )"
   before_commit_check="true"
 fi
 # Forcefully push all local files to remote repository
@@ -1556,7 +1831,7 @@ if
 then
   printf "Pushing changes to GitHub.\n"
   if
-    check_connection
+    [[ "$(check_connection && check_for_login)" ]]
   then
     if
       git -C "$HOME/.github/$repo_name.git" push -f --set-upstream "$git_repo_url" master &> /dev/null
