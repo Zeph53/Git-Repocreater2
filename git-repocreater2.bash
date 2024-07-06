@@ -3,7 +3,8 @@
 ## This is a script that automates GitHub operations, such as:
 ## logging in, staying logged in, creating working folders,
 ## creating repositories, creating and editing descriptions, 
-## choosing and creating licensing,
+## choosing and creating licensing, creating and synchronizing
+## README.MD fles, 
 #
 #
 #
