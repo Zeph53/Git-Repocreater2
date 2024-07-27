@@ -79,6 +79,10 @@ Simply execute the script with the file or directory that you would like to turn
     Added a check for an existing LICENSE.MD on Github when the local repository doesn't have one.
     Unset secretive token immediately after use.
 ## Queue  
+    Improve script consistency, rewrite sections to be more universal with other sections.
+    Automatically open the GitHub webpage for the secret authentication key when current key is expired.
+    Correctly detect .MD vs .md file extension, will be changed to .MD.
+    Correctly detect MAIN vs MASTER GitHub repository branches.
     README.MD sync echoing is kinda spammy.
     Will need to clean up numbered selector for existing repository names.
     Add many debug messages, such as error codes.
